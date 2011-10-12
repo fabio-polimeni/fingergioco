@@ -7,3 +7,6 @@
 /fingergioco-csharp.sln
 /fingergioco.sln
 /fingergioco.userprefs
+/*.pdb
+/*.exe
+/fingergioco_Data/
