@@ -2,11 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 public class MainPawn : Pawn
-{
-	private float	m_Size;
-	private float	m_SizeRate;
-	private float	m_FinalSize;
-	
+{	
 	private bool	m_IsDying;
 	private bool 	m_IsSpawning;
 	
@@ -37,9 +33,9 @@ public class MainPawn : Pawn
 		if ( Input.GetMouseButton(0) )
 		{
 			// Until we reach the 100% in size we keep resizing
-			if ( m_Size < m_FinalSize )
+			if ( m_Size < FinalSize )
 			{
-				m_Size += m_SizeRate;
+				m_Size += SizeRate;
 				
 				// The transform component is always present, therefore,
 				// we don't need to check whether or not it exists.
@@ -49,7 +45,7 @@ public class MainPawn : Pawn
 				// 	not exist, or if exists, its scale is zero.
 				transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
 				
-				if ( m_Size < m_FinalSize )
+				if ( m_Size < FinalSize )
 				{
 					m_IsSpawning = true;
 				}
@@ -60,7 +56,7 @@ public class MainPawn : Pawn
 			// Resizing the actor until it will desappear
 			if ( m_Size > 0.0f )
 			{
-				m_Size -= m_SizeRate;
+				m_Size -= SizeRate;
 				transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
 				
 				m_IsDying = true;
@@ -73,16 +69,19 @@ public class MainPawn : Pawn
 				}
 			}
 		}
+		
+		// If the actor is not spawning or dying,
+		// then we can, keep track of its movement.
+		if ( !m_IsSpawning && m_IsDying )
+		{
+			
+		}
 	}
 	
 	// Spawn the actor, and initialise the size.
 	public override void Spawn()
 	{
 		base.Spawn();
-	
-		m_FinalSize			= 1.0f;
-		m_Size				= 0.0f;
-		m_SizeRate			= 0.05f;
 		
 		m_IsSpawning		= false;
 		m_IsDying			= false;

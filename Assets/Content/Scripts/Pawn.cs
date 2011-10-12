@@ -3,6 +3,12 @@ using System.Collections;
 
 public class Pawn : MonoBehaviour
 {
+	protected 	float	m_Size;
+
+	public 		float	SizeRate;
+	public 		float	FinalSize;
+	public 		float	Speed;
+
 	// Use this when the level is loaded
 	protected virtual void Awake()
 	{
