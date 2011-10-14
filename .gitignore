@@ -12,3 +12,5 @@
 /fingergioco_Data/
 /*.sln
 /*.userprefs
+/*.csproj
+/*.pidb
