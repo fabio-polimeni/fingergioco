@@ -35,6 +35,13 @@ public class SpawnManager : MonoBehaviour
 			// Destory the main actor if exists
 			DestoryPawn( MainActor );
 			
+			Vector3 hitPoint = Camera.main.ScreenToWorldPoint(
+				new Vector3( Input.mousePosition.x, Input.mousePosition.y, Camera.main.far ) );
+			
+			hitPoint.y = Actor.transform.localPosition.y;
+			MainActor = (GameObject)Instantiate(Actor, hitPoint, Quaternion.identity );
+			
+			/*
 			Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
             RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
             foreach (RaycastHit hit in hits)
@@ -43,10 +50,12 @@ public class SpawnManager : MonoBehaviour
                 if (hit.transform.tag == "Base Surface")
                 {
 					// Instantiate the new actor
+					hit.point.y = Actor.transform.localPosition.y;
 					MainActor = (GameObject)Instantiate(Actor, hit.point, Quaternion.identity );
 					break;
 				}
             }
+			*/
 		}
 	}
 	
