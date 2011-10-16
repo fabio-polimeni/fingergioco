@@ -35,27 +35,38 @@ public class SpawnManager : MonoBehaviour
 			// Destory the main actor if exists
 			DestoryPawn( MainActor );
 			
-			Vector3 hitPoint = Camera.main.ScreenToWorldPoint(
-				new Vector3( Input.mousePosition.x, Input.mousePosition.y, Camera.main.far ) );
+			bool createActor = false;
+			Vector3 hitPoint = new Vector3( 0.0f, 0.0f, 0.0f );
 			
-			hitPoint.y = Actor.transform.localPosition.y;
-			MainActor = (GameObject)Instantiate(Actor, hitPoint, Quaternion.identity );
-			
-			/*
-			Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-            RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
-            foreach (RaycastHit hit in hits)
+			// If the camera is orthografic, calculation can be easier.
+			if ( Camera.main.isOrthoGraphic )
 			{
-				//Debug.DrawLine (ray.origin, hit.point);
-                if (hit.transform.tag == "Base Surface")
-                {
-					// Instantiate the new actor
-					hit.point.y = Actor.transform.localPosition.y;
-					MainActor = (GameObject)Instantiate(Actor, hit.point, Quaternion.identity );
-					break;
-				}
-            }
-			*/
+				hitPoint = Camera.main.ScreenToWorldPoint(
+					new Vector3( Input.mousePosition.x, Input.mousePosition.y, Camera.main.far ) );
+				
+				hitPoint.y = Actor.transform.localPosition.y;
+				createActor = true;
+			}
+			else
+			{
+				Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
+	            RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
+	            foreach (RaycastHit hit in hits)
+				{
+	                if (hit.transform.tag == "Base Surface")
+	                {
+						// Instantiate the new actor
+						hitPoint = new Vector3( hit.point.x, Actor.transform.localPosition.y, hit.point.z );
+						createActor = true;
+						break;
+					}
+	            }
+			}
+			
+			if ( createActor )
+			{
+				MainActor = (GameObject)Instantiate(Actor, hitPoint, Quaternion.identity );
+			}
 		}
 	}
 	
@@ -65,7 +76,7 @@ public class SpawnManager : MonoBehaviour
 		// If an other actor already exists, then, we need to destory it.
 		if ( gameObject )
 		{
-			Pawn pawn = (MainPawn)gameObject.GetComponent<Pawn>();
+			Pawn pawn = (Pawn)gameObject.GetComponent<Pawn>();
 			if ( pawn )
 			{
 				pawn.Kill();

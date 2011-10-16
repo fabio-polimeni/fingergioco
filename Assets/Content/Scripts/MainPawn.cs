@@ -5,9 +5,11 @@ public class MainPawn : Pawn
 {
 	private bool	m_IsDying;
 	private bool 	m_IsSpawning;
+	private bool	m_IsActive;
 
 	public 	float	spawnRate;
 	public 	float	dieRate;
+	public	float	rotationRate;
 	
 	// Use this when the level is loaded
 	protected override void Awake()
@@ -17,46 +19,53 @@ public class MainPawn : Pawn
 	}
 
 	// Use this for initialization
-	protected override void Start ()
+	protected override void Start()
 	{
-		base.Start();		
-		transform.localScale = new Vector3(
-			m_Size, transform.localScale.y, m_Size );
+		base.Start();
 	}
 	
-	// Move the actor
-	private void MoveActor()
-	{	
+	// Calculate the approaching point
+	private Vector3 ApproachPoint()
+	{
+		// Declare the deisplacement vector
 		Vector3 movement = new Vector3( 0.0f, 0.0f, 0.0f );
-		
-		/*
-		// NOTE: We compute the position we want to reach
-		//		 from the ray we spawn from the camera.
-		RaycastHit hit;
-		Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-       	if ( Physics.Raycast(ray, out hit, Camera.main.far) )
+
+		// Calculate the movement due to the stationary position
+		// of the finger, which the actor tends to approach.
+		// If the camera is orthografic, calculation can be easier.
+		if ( Camera.main.isOrthoGraphic )
 		{
-			// Calculate the movement due to the stationary position
-			// of the finger, which the actor tends to approach.
-			Vector3 reachPoint = new Vector3( hit.point.x, transform.localPosition.y, hit.point.z );
-			movement = (reachPoint - transform.localPosition) * approachSpeed;
-		}
-		*/
-		
-		// NOTE: Alternative method for computing the reach point.
-		//		 The advantage here is that we don't need a base to hit.
-		{			
-			// Calculate the movement due to the stationary position
-			// of the finger, which the actor tends to approach.
 			Vector3 reachPoint = Camera.main.ScreenToWorldPoint(
 				new Vector3( Input.mousePosition.x, Input.mousePosition.y, Camera.main.far ) );
-			
+
 			Vector3 approachMov = new Vector3(reachPoint.x,transform.localPosition.y,reachPoint.z);
 			movement = (approachMov - transform.localPosition) * approachSpeed * ( Time.fixedDeltaTime * 100.0f );
 		}
-
-		// Move the actor.
-		rigidbody.MovePosition( transform.localPosition + movement );
+		else
+		{
+			Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
+            RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
+            foreach (RaycastHit hit in hits)
+			{
+                if (hit.transform.tag == "Base Surface")
+                {					
+					// Calculate the movement due to the stationary position
+					// of the finger, which the actor tends to approach.
+					Vector3 reachPoint = new Vector3( hit.point.x, transform.localPosition.y, hit.point.z );
+					movement = (reachPoint - transform.localPosition) * approachSpeed;
+					
+					break;
+				}
+            }
+		}
+		
+		return movement;
+	}
+	
+	// Move the actor
+	protected override void Move( Vector3 movement )
+	{
+		base.Move( movement );
 	}
 	
 	// Update physics
@@ -66,9 +75,11 @@ public class MainPawn : Pawn
 
 		// If the actor is not spawning or dying,
 		// then we can, keep track of its movement.
-		if ( !m_IsSpawning && !m_IsDying )
+		// Move the actor only if the mouse button is pressed.
+		if ( rigidbody && m_IsActive )
 		{
-			MoveActor();
+			Move( ApproachPoint() );
+			Rotate( rotationRate );
 		}
 	}
 	
@@ -80,7 +91,8 @@ public class MainPawn : Pawn
 		// Reset states
 		m_IsSpawning	= false;
 		m_IsDying		= false;
-		
+		m_IsActive		= false;
+
 		// We keep active the pawn until the mouse button is pressed
 		if ( Input.GetMouseButton(0) )
 		{
@@ -98,6 +110,18 @@ public class MainPawn : Pawn
 					m_IsSpawning = true;
 				}
 			}
+
+			// Move the pawn if it is not spawning
+			if ( m_IsSpawning == false )
+			{
+				m_IsActive = true;
+				
+				if ( rigidbody == null )
+				{
+					Move( ApproachPoint() );
+					Rotate( rotationRate );
+				}
+			}
 		}
 		else
 		{
@@ -106,15 +130,14 @@ public class MainPawn : Pawn
 			{
 				m_Size -= dieRate;
 				transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
-				
 				m_IsDying = true;
-				
-				// Kill the actor if necesasry
-				if ( m_Size <= 0.0f )
-				{
-					SpawnManager.Ref.DestoryPawn( this.gameObject );
-					m_IsDying = false;
-				}
+			}
+
+			// Kill the actor if necesasry
+			if ( m_Size <= 0.0f )
+			{
+				SpawnManager.Ref.DestoryPawn( this.gameObject );
+				m_IsDying = false;
 			}
 		}
 	}
@@ -126,7 +149,17 @@ public class MainPawn : Pawn
 		
 		m_IsSpawning	= false;
 		m_IsDying		= false;
+		m_IsActive		= false;
+
 		m_Size			= 0.0f;
+		
+		// Spawning and dying rate will be calculate according to the final size.
+		// They should be given in percentage values.
+		spawnRate	= Mathf.Clamp01( spawnRate ) * finalSize;
+		dieRate		= Mathf.Clamp01( dieRate ) * finalSize;
+		
+		// Set the local scale. It won't affect particles nor the y-scale.
+		transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
 	}
 	
 	// Kill the actor
@@ -143,5 +176,10 @@ public class MainPawn : Pawn
 	public bool IsSpawning
 	{
 		get { return m_IsSpawning; }
+	}
+	
+	public bool IsActive
+	{
+		get { return m_IsActive; }
 	}
 }
