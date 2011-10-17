@@ -10,16 +10,16 @@ public class Pawn : MonoBehaviour
 	/// <summary>
 	/// Properties.
 	/// </summary>
-
-	protected 	float				m_Size;
+	
+	protected	bool				m_IsActive;
+	
 	protected	float				m_ParticleMinSize;
 	protected	float				m_ParticleMaxSize;
 	
 	protected	ParticleAnimator	particleAnimator;
 	protected	ParticleRenderer	particleRenderer;
 	protected	Color[]				particleColors;
-	
-	public		float				approachSpeed;
+
 	public 		float				finalSize;
 	
 	/// <summary>
@@ -72,9 +72,6 @@ public class Pawn : MonoBehaviour
 		{
 			particleColors = particleAnimator.colorAnimation;
 		}
-		
-		// Clamp the approach speed.
-		approachSpeed = Mathf.Clamp01( approachSpeed );
 	}
 
 	// Use this for initialization
@@ -96,6 +93,32 @@ public class Pawn : MonoBehaviour
 	/// Non-Unity functions. 
 	/// </summary>
 	
+	// Activate the pawn.
+	// Returns true if was deactive, false otherwise.
+	protected virtual bool Activate()
+	{
+		if ( this.IsActive == false )
+		{
+			m_IsActive = true;
+			return true;
+		}
+		
+		return false;
+	}
+	
+	// Deactivate the pawn.
+	// Returns true if was active, false otherwise.
+	protected virtual bool Deactivate()
+	{
+		if ( this.IsActive )
+		{
+			m_IsActive = false;
+			return true;
+		}
+		
+		return false;
+	}
+	
 	// Move the pawn
 	protected virtual void Move( Vector3 movement )
 	{
@@ -107,8 +130,8 @@ public class Pawn : MonoBehaviour
 		}
 		else
 		{
-			transform.localPosition += movement;
-			//transform.Translate( movement, Space.World );
+			//transform.localPosition += movement;
+			transform.Translate( movement, Space.World );
 		}
 	}
 	
@@ -135,5 +158,11 @@ public class Pawn : MonoBehaviour
 	// Kill the actor
 	public virtual void Kill()
 	{
+	}
+	
+	// Returns whether the pawn is active or not
+	public bool IsActive
+	{
+		get { return m_IsActive; }
 	}
 }

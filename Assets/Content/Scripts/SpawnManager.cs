@@ -6,15 +6,15 @@ public class SpawnManager : MonoBehaviour
 	public GameObject			Actor;
 	static public SpawnManager	Ref;
 	
-	private GameObject			MainActor;
+	private GameObject			m_Finger;
 	
 	// Use this when the level is loaded
 	void Awake()
 	{
-		MainActor	= null;
+		m_Finger	= null;
 		Ref			= this;
 
-		DontDestroyOnLoad(this);
+		DontDestroyOnLoad( this );
 	}
 
 	// Use this for initialization
@@ -33,7 +33,7 @@ public class SpawnManager : MonoBehaviour
 		if ( Input.GetMouseButtonDown(0) )
 		{
 			// Destory the main actor if exists
-			DestoryPawn( MainActor );
+			DestoryPawn( m_Finger );
 			
 			bool createActor = false;
 			Vector3 hitPoint = new Vector3( 0.0f, 0.0f, 0.0f );
@@ -65,7 +65,7 @@ public class SpawnManager : MonoBehaviour
 			
 			if ( createActor )
 			{
-				MainActor = (GameObject)Instantiate(Actor, hitPoint, Quaternion.identity );
+				m_Finger = (GameObject)Instantiate(Actor, hitPoint, Quaternion.identity );
 			}
 		}
 	}
@@ -83,9 +83,9 @@ public class SpawnManager : MonoBehaviour
 			}
 
 			Object.Destroy( gameObject );
-			if ( gameObject == MainActor )
+			if ( gameObject == m_Finger )
 			{
-				MainActor = null;
+				m_Finger = null;
 			}
 		}
 	}
