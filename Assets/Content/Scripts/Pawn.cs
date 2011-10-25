@@ -2,8 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 [RequireComponent (typeof(Rigidbody),
-                   typeof(MeshCollider),
-                   typeof(ParticleEmitter))]
+                   typeof(MeshCollider))]
 
 public class Pawn : MonoBehaviour
 {
@@ -11,16 +10,11 @@ public class Pawn : MonoBehaviour
 	/// Properties.
 	/// </summary>
 	
-	protected	bool				m_IsActive;
-	
-	protected	float				m_ParticleMinSize;
-	protected	float				m_ParticleMaxSize;
-	
-	protected	ParticleAnimator	particleAnimator;
-	protected	ParticleRenderer	particleRenderer;
-	protected	Color[]				particleColors;
+	protected	bool	m_IsActive;
+	protected	float	m_ParticleMinSize;
+	protected	float	m_ParticleMaxSize;
 
-	public 		float				finalSize;
+	public 		float	finalSize;
 	
 	/// <summary>
 	/// Unity functions.
@@ -28,49 +22,12 @@ public class Pawn : MonoBehaviour
 
 	// Use this when the level is loaded
 	protected virtual void Awake()
-	{
-		// Initialise particle system
-		particleRenderer = null;
-		particleAnimator = null;
-		
+	{		
 		// Disable the mesh render if exsists.
 		MeshRenderer meshRenderer = gameObject.GetComponent<MeshRenderer>();
 		if ( meshRenderer )
 		{
 			Object.Destroy( meshRenderer );
-		}
-		
-		// Store initial particle size information.
-		m_ParticleMaxSize = particleEmitter.maxSize;
-		m_ParticleMinSize = particleEmitter.minSize;
-		
-		//particleEmitter.maxSize = 0.0f;
-		//particleEmitter.minSize = 0.0f;
-		
-		// We want the particle emitter follows the object.
-		particleEmitter.useWorldSpace = false;
-		
-		// Get the particle renderer. It will never be null since is a required component.
-		particleRenderer = gameObject.GetComponent<ParticleRenderer>();
-		if ( particleRenderer == null )
-		{
-			Debug.LogWarning( "You need to provide a valid particle renderer for the game object: " + gameObject.name );
-		}
-		
-		// Get the particle animator. It will never be null since is a required component.
-		particleAnimator = gameObject.GetComponent<ParticleAnimator>();
-		if ( particleAnimator == null )
-		{
-			Debug.LogWarning( "You need to provide a valid particle animator for the game object: " + gameObject.name );
-		}
-		
-		// Store initial animated colors, so we won't brake
-		// animations been setup by the artist, since we might
-		// want to apply an effect from the script, especially
-		// to fade in/out during spawning/dying time.
-		if ( particleAnimator && particleAnimator.doesAnimateColor )
-		{
-			particleColors = particleAnimator.colorAnimation;
 		}
 	}
 

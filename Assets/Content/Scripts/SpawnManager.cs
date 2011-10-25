@@ -3,18 +3,19 @@ using System.Collections;
 
 public class SpawnManager : MonoBehaviour
 {
-	public GameObject			Actor;
-	static public SpawnManager	Ref;
-	
-	private GameObject			m_Finger;
-	
+	public	GameObject	Actor;	
+	private	GameObject	m_Finger;
+
+	// Singleton pattern.
+	private static SpawnManager m_Instance = null;
+    public static SpawnManager Instance { get { return m_Instance; } }
+
 	// Use this when the level is loaded
 	void Awake()
 	{
 		m_Finger	= null;
-		Ref			= this;
-
-		DontDestroyOnLoad( this );
+		m_Instance	= this;
+		Object.DontDestroyOnLoad( this );
 	}
 
 	// Use this for initialization
@@ -55,7 +56,7 @@ public class SpawnManager : MonoBehaviour
 				{
 	                if (hit.transform.tag == "Base Surface")
 	                {
-						// Instantiate the new actor
+						// Determine the new spawned location.
 						hitPoint = new Vector3( hit.point.x, Actor.transform.localPosition.y, hit.point.z );
 						createActor = true;
 						break;
@@ -65,7 +66,8 @@ public class SpawnManager : MonoBehaviour
 			
 			if ( createActor )
 			{
-				m_Finger = (GameObject)Instantiate(Actor, hitPoint, Quaternion.identity );
+				// Instantiate the new actor
+				m_Finger = (GameObject)Object.Instantiate(Actor, hitPoint, Quaternion.identity );
 			}
 		}
 	}

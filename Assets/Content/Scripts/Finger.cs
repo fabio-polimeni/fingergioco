@@ -145,7 +145,7 @@ public class Finger : Pawn
 			// Kill the actor if necesasry
 			if ( m_Size <= 0.0f )
 			{
-				SpawnManager.Ref.DestoryPawn( this.gameObject );
+				SpawnManager.Instance.DestoryPawn( this.gameObject );
 				m_IsDying = false;
 			}
 		}
