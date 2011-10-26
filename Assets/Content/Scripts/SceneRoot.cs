@@ -20,14 +20,14 @@ public class SceneRoot : MonoBehaviour
 	{
 		// The root is the game object itself.
 		m_Root = gameObject;
-		
+
 		// Once we load this level, we add this root to the level manager.
-		if ( SceneManager.Instance.roots[Application.loadedLevel] == null )
+		if ( SceneManager.Roots[Application.loadedLevel] == null )
 		{
 			this.m_SceneIndex	= Application.loadedLevel;
 			this.m_SceneName	= Application.loadedLevelName;
 			
-			SceneManager.Instance.roots[this.m_SceneIndex] = this;
+			SceneManager.Roots[this.m_SceneIndex] = this;
 		}
 		else
 		{
