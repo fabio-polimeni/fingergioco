@@ -21,12 +21,23 @@ public class SceneManager : MonoBehaviour
 	// They might are not available in case the current
 	// level index is zero, or is equel to the last
 	// available scene in the game.
-	private int	m_CurrentSceneIndex;
+	private int	m_LastLoadedScene;
+	public static int LastLoadedScene
+	{
+		// Return the index of the current scene.
+		get { return SceneManager.Instance.m_LastLoadedScene; }
+	}
+	
 	private int m_SceneLoading;
+	public static int SceneLoading
+	{
+		// Return the index of the scene currently loading, a negative number otherwise.
+		get { return SceneManager.Instance.m_SceneLoading; }
+	}
 	
 	// Singleton pattern.
 	private static SceneManager m_Instance = null;
-    public static SceneManager Instance
+	public static SceneManager Instance
 	{
 		get
 		{
@@ -39,6 +50,9 @@ public class SceneManager : MonoBehaviour
 				// Instantiate level roots array.
 				// Level roots are not initialised at this point.
 				m_Instance.m_Roots = new SceneRoot[Application.levelCount];
+				
+				// Nothing is loading at the beginning
+				m_Instance.m_SceneLoading = -1;
 			}
 
 			return m_Instance;
@@ -52,18 +66,19 @@ public class SceneManager : MonoBehaviour
 		Object.DontDestroyOnLoad( this );
 		
 		// Set the current scene index.
-		m_CurrentSceneIndex = Application.loadedLevel;
-		m_SceneLoading = -1;
+		m_LastLoadedScene = Application.loadedLevel;
 	}
 
 	// Use this for initialization
-	void Start ()
+	void Start()
 	{
-		SceneManager.LoadNextScene( false, !GameSettings.AsyncSceneLoading );
+		SceneManager.LoadNextScene(
+			GameSettings.AdditiveSceneLoading,
+			!GameSettings.AsyncSceneLoading );
 	}
 	
 	// Update is called once per frame
-	void Update ()
+	void Update()
 	{
 	}
 	
@@ -72,7 +87,27 @@ public class SceneManager : MonoBehaviour
 	/// </summary>
 	
 	// Load a new level.
-	private IEnumerator LoadSceneSync( int index, bool additive )
+	private void LoadSceneSync( int index, bool additive )
+	{
+		if ( additive )
+		{
+			Application.LoadLevelAdditive( index );
+		}
+		else
+		{
+			Application.LoadLevel( index );
+		}
+
+		m_LastLoadedScene = index;
+		m_SceneLoading = -1;
+
+#if UNITY_EDITOR
+		Debug.Log("Scene loaded: " + this.m_LastLoadedScene );
+#endif
+	}
+	
+	// Load a new level.
+	private IEnumerator LoadSceneCoroutine( int index, bool additive )
 	{
 		if ( additive )
 		{
@@ -83,17 +118,19 @@ public class SceneManager : MonoBehaviour
 			Application.LoadLevel( index );
 		}
 		
-		yield return m_SceneLoading = -1;
+		m_LastLoadedScene = index;
 
-	#if UNITY_EDITOR
-		Debug.Log( "Scene loaded: " + Application.loadedLevelName );
-	#endif
+#if UNITY_EDITOR
+		Debug.Log("Scene loaded: " + this.m_LastLoadedScene);
+#endif
+
+		yield return m_SceneLoading = -1;
 	}
 	
 	// It should be called as a co-routine.
 	private void LoadSceneAsync( int index, bool additive )
 	{
-		this.StartCoroutine( LoadSceneSync( index, additive ) );
+		this.StartCoroutine( LoadSceneCoroutine( index, additive ) );
 		
 		// NOTE: The following method is preferred, but works on PRO version only :(
 		//( additive ) ? Application.LoadLevelAdditiveAsync( index ) : Application.LoadLevelAsync( index );
@@ -103,10 +140,10 @@ public class SceneManager : MonoBehaviour
 	private bool LoadSceneByIndex( int index, bool additive, bool blocking )
 	{
 		if ( 	( Application.isLoadingLevel == false )
-		    &&	( Application.CanStreamedLevelBeLoaded( index ) )
-		    &&	( SceneManager.SceneLoading < 0 )
-		    && 	( SceneManager.IsSceneValid( index ) )
-		    && 	( SceneManager.IsSceneLoaded( index ) == false) )
+			&&	( Application.CanStreamedLevelBeLoaded( index ) )
+			&&	( SceneManager.SceneLoading < 0 )
+			&& 	( SceneManager.IsSceneValid( index ) )
+			&& 	( SceneManager.IsSceneLoaded( index ) == false) )
 		{
 			m_SceneLoading = index;
 			if ( blocking )
@@ -134,13 +171,13 @@ public class SceneManager : MonoBehaviour
 		int nextLevelIndex = -1;
 		
 		// If the current one is not the last one.
-		if ( SceneManager.Instance.m_CurrentSceneIndex < (Application.levelCount-1) )
+		if ( SceneManager.Instance.m_LastLoadedScene < (Application.levelCount-1) )
 		{
 			// Load next scene.
 			if ( SceneManager.Instance.LoadSceneByIndex(
-				SceneManager.Instance.m_CurrentSceneIndex+1, additive, blocking ) )
+				SceneManager.Instance.m_LastLoadedScene+1, additive, blocking ) )
 			{
-				nextLevelIndex = SceneManager.Instance.m_CurrentSceneIndex+1;
+				nextLevelIndex = SceneManager.Instance.m_LastLoadedScene+1;
 			}
 		}
 		
@@ -157,13 +194,13 @@ public class SceneManager : MonoBehaviour
 		int prevLevelIndex = -1;
 		
 		// If the current one is greater than one.
-		if ( SceneManager.Instance.m_CurrentSceneIndex > 0 )
+		if ( SceneManager.Instance.m_LastLoadedScene > 0 )
 		{
 			// Load previous index.
 			if ( SceneManager.Instance.LoadSceneByIndex(
-				SceneManager.Instance.m_CurrentSceneIndex-1, additive, blocking ) )
+				SceneManager.Instance.m_LastLoadedScene-1, additive, blocking ) )
 			{
-				prevLevelIndex = SceneManager.Instance.m_CurrentSceneIndex-1;
+				prevLevelIndex = SceneManager.Instance.m_LastLoadedScene-1;
 			}
 		}
 		
@@ -180,12 +217,6 @@ public class SceneManager : MonoBehaviour
 	public static bool IsSceneLoaded( int index )
 	{
 		return ( SceneManager.IsSceneValid( index ) && (SceneManager.Roots[index] != null) ) ? true : false;
-	}
-	
-	// Return the index of the scene currently loading, a negative number otherwise.
-	public static int SceneLoading
-	{
-		get { return SceneManager.Instance.m_SceneLoading; }
 	}
 
 }

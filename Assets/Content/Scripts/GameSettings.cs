@@ -18,12 +18,15 @@ public class GameSettings : MonoBehaviour
 	public bool				m_AsyncSceneLoading		= true;
 	public static bool 		AsyncSceneLoading { get { return GameSettings.Instance.m_AsyncSceneLoading; } }
 	
+	public bool				m_AdditiveSceneLoading	= true;
+	public static bool 		AdditiveSceneLoading { get { return GameSettings.Instance.m_AdditiveSceneLoading; } }
+	
 	public int				m_MaxNumberOfEnemies	= 10;
 	public static int 		MaxNumberOfEnemies { get { return GameSettings.Instance.m_MaxNumberOfEnemies; } }
 
 	// Singleton pattern.
 	private static GameSettings m_Instance = null;
-    public static GameSettings Instance { get { return m_Instance; } }
+	public static GameSettings Instance { get { return m_Instance; } }
 
 	// Use this when the level is loaded
 	void Awake()

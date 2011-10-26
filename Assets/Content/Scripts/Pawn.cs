@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 [RequireComponent (typeof(Rigidbody),
-                   typeof(MeshCollider))]
+				   typeof(MeshCollider))]
 
 public class Pawn : MonoBehaviour
 {

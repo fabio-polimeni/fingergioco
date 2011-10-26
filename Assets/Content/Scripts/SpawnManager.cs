@@ -8,7 +8,7 @@ public class SpawnManager : MonoBehaviour
 
 	// Singleton pattern.
 	private static SpawnManager m_Instance = null;
-    public static SpawnManager Instance { get { return m_Instance; } }
+	public static SpawnManager Instance { get { return m_Instance; } }
 
 	// Use this when the level is loaded
 	void Awake()
@@ -51,17 +51,17 @@ public class SpawnManager : MonoBehaviour
 			else
 			{
 				Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-	            RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
-	            foreach (RaycastHit hit in hits)
+				RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
+				foreach (RaycastHit hit in hits)
 				{
-	                if (hit.transform.tag == "Base Surface")
-	                {
+					if (hit.transform.tag == "Base Surface")
+					{
 						// Determine the new spawned location.
 						hitPoint = new Vector3( hit.point.x, Actor.transform.localPosition.y, hit.point.z );
 						createActor = true;
 						break;
 					}
-	            }
+				}
 			}
 			
 			if ( createActor )

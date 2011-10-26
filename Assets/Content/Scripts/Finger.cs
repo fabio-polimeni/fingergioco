@@ -51,11 +51,11 @@ public class Finger : Pawn
 		else
 		{
 			Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-            RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
-            foreach (RaycastHit hit in hits)
+			RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
+			foreach (RaycastHit hit in hits)
 			{
-                if (hit.transform.tag == "Base Surface")
-                {					
+				if (hit.transform.tag == "Base Surface")
+				{					
 					// Calculate the movement due to the stationary position
 					// of the finger, which the actor tends to approach.
 					Vector3 reachPoint = new Vector3( hit.point.x, transform.localPosition.y, hit.point.z );
@@ -63,7 +63,7 @@ public class Finger : Pawn
 					
 					break;
 				}
-            }
+			}
 		}
 		
 		return movement;

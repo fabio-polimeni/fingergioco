@@ -8,8 +8,9 @@ public class SceneRoot : MonoBehaviour
 	// All objects attached to this one will
 	// be destroyed once the level is unloaded.
 	private GameObject	m_Root;
+	public GameObject Root { get { return m_Root; } }
+
 	private int			m_SceneIndex;
-	private string		m_SceneName;
 
 	/// <summary>
 	/// Unity functions.
@@ -21,23 +22,27 @@ public class SceneRoot : MonoBehaviour
 		// The root is the game object itself.
 		m_Root = gameObject;
 
-		// Once we load this level, we add this root to the level manager.
-		if ( SceneManager.Roots[Application.loadedLevel] == null )
+		// Once we load this level, we add the root to the level manager.
+		if ( SceneManager.Roots[SceneManager.LastLoadedScene] == null )
 		{
-			this.m_SceneIndex	= Application.loadedLevel;
-			this.m_SceneName	= Application.loadedLevelName;
-			
+			this.m_SceneIndex = SceneManager.LastLoadedScene;
 			SceneManager.Roots[this.m_SceneIndex] = this;
+			
+		#if UNITY_EDITOR
+			Debug.Log( "Scene registered: " + this.m_SceneIndex );
+		#endif
 		}
+	#if UNITY_EDITOR
 		else
 		{
 			// We shouldn't be able to load a level which is already loaded.
-			Debug.LogError( "Level " + Application.loadedLevelName + " already loaded!" );
+			Debug.LogError( "Level " + this.m_SceneIndex + " already loaded!" );
 		}
+	#endif
 	}
 
 	// Use this for initialization
-	protected virtual void Start ()
+	protected virtual void Start()
 	{
 	}
 	
@@ -47,7 +52,7 @@ public class SceneRoot : MonoBehaviour
 	}
 	
 	// Update is called once per frame
-	protected virtual void Update ()
+	protected virtual void Update()
 	{	
 	}
 	
@@ -55,15 +60,4 @@ public class SceneRoot : MonoBehaviour
 	/// Non-Unity functions.
 	/// </summary>
 	
-	// Get the root game object
-	public GameObject Root
-	{
-		get { return m_Root; }
-	}
-	
-	// Get scene name
-	public string SceneName
-	{
-		get { return m_SceneName; }
-	}
 }
