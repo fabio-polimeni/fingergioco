@@ -7,8 +7,8 @@ public class SceneRoot : MonoBehaviour
 	// Every level must have one and one only this object.
 	// All objects attached to this one will
 	// be destroyed once the level is unloaded.
-	private GameObject	m_Root;
-	public GameObject Root { get { return m_Root; } }
+	private GameObject  m_TreeRoot;
+	public GameObject   TreeRoot { get { return m_TreeRoot; } }
 
 	private int			m_SceneIndex;
 
@@ -20,7 +20,7 @@ public class SceneRoot : MonoBehaviour
 	protected virtual void Awake()
 	{
 		// The root is the game object itself.
-		m_Root = gameObject;
+		m_TreeRoot = gameObject;
 
 		// Once we load this level, we add the root to the level manager.
 		if ( SceneManager.Roots[SceneManager.LastLoadedScene] == null )

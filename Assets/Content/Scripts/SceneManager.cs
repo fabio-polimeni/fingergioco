@@ -137,7 +137,7 @@ public class SceneManager : MonoBehaviour
 	}
 	
 	// Load a new level by index and add it to the current scene.
-	private bool LoadSceneByIndex( int index, bool additive, bool blocking )
+	public static bool LoadSceneByIndex( int index, bool additive, bool blocking )
 	{
 		if ( 	( Application.isLoadingLevel == false )
 			&&	( Application.CanStreamedLevelBeLoaded( index ) )
@@ -145,14 +145,14 @@ public class SceneManager : MonoBehaviour
 			&& 	( SceneManager.IsSceneValid( index ) )
 			&& 	( SceneManager.IsSceneLoaded( index ) == false) )
 		{
-			m_SceneLoading = index;
+			SceneManager.Instance.m_SceneLoading = index;
 			if ( blocking )
 			{
-				this.LoadSceneSync( index, additive );
+				SceneManager.Instance.LoadSceneSync( index, additive );
 			}
 			else
 			{
-				this.LoadSceneAsync( index, additive );
+				SceneManager.Instance.LoadSceneAsync( index, additive );
 			}
 			
 			return true;
@@ -174,7 +174,7 @@ public class SceneManager : MonoBehaviour
 		if ( SceneManager.Instance.m_LastLoadedScene < (Application.levelCount-1) )
 		{
 			// Load next scene.
-			if ( SceneManager.Instance.LoadSceneByIndex(
+			if ( SceneManager.LoadSceneByIndex(
 				SceneManager.Instance.m_LastLoadedScene+1, additive, blocking ) )
 			{
 				nextLevelIndex = SceneManager.Instance.m_LastLoadedScene+1;
@@ -197,7 +197,7 @@ public class SceneManager : MonoBehaviour
 		if ( SceneManager.Instance.m_LastLoadedScene > 0 )
 		{
 			// Load previous index.
-			if ( SceneManager.Instance.LoadSceneByIndex(
+			if ( SceneManager.LoadSceneByIndex(
 				SceneManager.Instance.m_LastLoadedScene-1, additive, blocking ) )
 			{
 				prevLevelIndex = SceneManager.Instance.m_LastLoadedScene-1;
@@ -205,6 +205,24 @@ public class SceneManager : MonoBehaviour
 		}
 		
 		return prevLevelIndex;
+	}
+
+	// Destroy a given scene by index.
+	// Return true if the scene was loaded and now has been destroyed successfully.
+	public static bool DestroySceneByIndex( int index )
+	{
+		if ( index > 0 && index < SceneManager.Roots.Length )
+		{
+			SceneRoot root = SceneManager.Roots[index];
+			if (root)
+			{
+				Object.Destroy( SceneManager.Roots[index].TreeRoot );
+				SceneManager.Roots[index] = null;
+				return true;
+			}
+		}
+
+		return false;
 	}
 	
 	// Return true if the index is a valid scene, false otherwise.
