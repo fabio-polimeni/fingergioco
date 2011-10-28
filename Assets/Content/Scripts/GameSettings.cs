@@ -9,11 +9,12 @@ public class GameSettings : MonoBehaviour
 	// accessible from the editor, but readonly from
 	// the game code. Moreover, we don't need to
 	// invoke the instance in order to access the property.
-	public float			m_ScrollSceneSpeed		= 1.0f;
-	public static	float 	ScrollSceneSpeed { get { return GameSettings.Instance.m_ScrollSceneSpeed; } }
 	
-	public float			m_BaseSurfaceExtent		= 0.5f;
+	public float			m_BaseSurfaceExtent		= 5.0f;
 	public static	float 	BaseSurfaceExtent { get { return GameSettings.Instance.m_BaseSurfaceExtent; } }
+
+    public float            m_CameraSpeed           = 1.0f;
+    public static float     CameraSpeed { get { return GameSettings.Instance.m_CameraSpeed; } }
 	
 	public bool				m_AsyncSceneLoading		= true;
 	public static bool 		AsyncSceneLoading { get { return GameSettings.Instance.m_AsyncSceneLoading; } }
@@ -34,8 +35,8 @@ public class GameSettings : MonoBehaviour
 		m_Instance	= this;
 		Object.DontDestroyOnLoad( this );
 		
-		// Avoid any stupid error ¬_¬
-		m_MaxNumberOfEnemies = Mathf.Min( 0, m_MaxNumberOfEnemies );
+		// Avoid any possible stupid error ¬_¬
+		m_MaxNumberOfEnemies    = Mathf.Min( 0, m_MaxNumberOfEnemies );
 	}
 	
 	// Use this for initialization

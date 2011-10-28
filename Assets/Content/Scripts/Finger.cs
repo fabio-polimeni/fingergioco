@@ -5,6 +5,7 @@ public class Finger : Pawn
 {
 	private bool	m_IsDying;
 	private bool 	m_IsSpawning;
+
 	private	float	m_Size;
 
 	public 	float	spawnRate;
@@ -34,12 +35,12 @@ public class Finger : Pawn
 	// Calculate the approaching point
 	private Vector3 ApproachPoint()
 	{
-		// Declare the deisplacement vector
+		// Declare the displacement vector
 		Vector3 movement = new Vector3( 0.0f, 0.0f, 0.0f );
 
 		// Calculate the movement due to the stationary position
 		// of the finger, which the actor tends to approach.
-		// If the camera is orthografic, calculation can be easier.
+		// If the camera is orthographic, calculation can be easier.
 		if ( Camera.main.isOrthoGraphic )
 		{
 			Vector3 reachPoint = Camera.main.ScreenToWorldPoint(
@@ -99,7 +100,7 @@ public class Finger : Pawn
 		m_IsSpawning	= false;
 		m_IsDying		= false;
 		
-		// Deactivate the palyer.
+		// Deactivate the player.
 		this.Deactivate();
 
 		// We keep active the pawn until the mouse button is pressed
@@ -134,7 +135,7 @@ public class Finger : Pawn
 		}
 		else
 		{
-			// Resizing the actor until it will desappear
+			// Resizing the actor until it will disappear
 			if ( m_Size > 0.0f )
 			{
 				m_Size -= dieRate;
@@ -142,10 +143,10 @@ public class Finger : Pawn
 				m_IsDying = true;
 			}
 
-			// Kill the actor if necesasry
+			// Kill the actor if necessary
 			if ( m_Size <= 0.0f )
 			{
-				SpawnManager.Instance.DestoryPawn( this.gameObject );
+				GameManager.Instance.DestoryPawn( this.gameObject );
 				m_IsDying = false;
 			}
 		}
@@ -161,7 +162,7 @@ public class Finger : Pawn
 		m_IsSpawning	= false;
 		m_IsDying		= false;
 		
-		// Deactivate the palyer.
+		// Deactivate the player.
 		this.Deactivate();
 		
 		// Spawning and dying rate will be calculate according to the final size.

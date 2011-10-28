@@ -44,6 +44,10 @@ public class SceneRoot : MonoBehaviour
 	// Use this for initialization
 	protected virtual void Start()
 	{
+        // Need to determine where to create the scene in the space.
+        // We need to do it here, because GameSettings has to be available.
+        float mulitplaier = ((SceneManager.LastLoadedScene - SceneManager.CurrentScene) > 0) ? 1.0f : -1.0f;
+        this.transform.localPosition += new Vector3(0.0f, 0.0f, GameSettings.BaseSurfaceExtent * mulitplaier);
 	}
 	
 	// Update physics
