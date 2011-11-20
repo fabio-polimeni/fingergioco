@@ -47,7 +47,7 @@ public class Finger : Pawn
 				new Vector3( Input.mousePosition.x, Input.mousePosition.y, Camera.main.far ) );
 
 			Vector3 approachMov = new Vector3(reachPoint.x,transform.localPosition.y,reachPoint.z);
-			movement = (approachMov - transform.localPosition) * approachSpeed * ( Time.fixedDeltaTime * 100.0f );
+			movement = (approachMov - transform.localPosition) * approachSpeed;
 		}
 		else
 		{
@@ -79,16 +79,18 @@ public class Finger : Pawn
 	// Update physics
 	protected override void FixedUpdate()
 	{
-		base.FixedUpdate();
+		//base.FixedUpdate();
 
 		// If the actor is not spawning or dying,
-		// then we can, keep track of its movement.
+		// then we can keep track of its movement.
 		// Move the actor only if the mouse button is pressed.
-		if ( rigidbody && this.IsActive )
-		{
-			Move( ApproachPoint() );
-			Rotate( rotationRate );
-		}
+        // Unfortunatelly moving the actor inside
+        // this function can cause hitchings.
+        //if (rigidbody && this.IsActive)
+        //{
+        //    Move(ApproachPoint());
+        //    Rotate(rotationRate);
+        //}
 	}
 	
 	// Update is called once per frame
@@ -126,7 +128,9 @@ public class Finger : Pawn
 			{
 				this.Activate();
 				
-				if ( rigidbody == null )
+                // Move tha actor is regardelss whether or
+                // not is has got a rigid-body component.
+				//if ( rigidbody == null )
 				{
 					Move( ApproachPoint() );
 					Rotate( rotationRate );

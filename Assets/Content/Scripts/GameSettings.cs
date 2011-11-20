@@ -9,25 +9,25 @@ public class GameSettings : MonoBehaviour
 	// accessible from the editor, but readonly from
 	// the game code. Moreover, we don't need to
 	// invoke the instance in order to access the property.
-	
+
 	public float			m_BaseSurfaceExtent		= 5.0f;
-	public static	float 	BaseSurfaceExtent { get { return GameSettings.Instance.m_BaseSurfaceExtent; } }
+	public static	float 	BaseSurfaceExtent       { get { return GameSettings.Instance.m_BaseSurfaceExtent; } }
 
     public float            m_CameraSpeed           = 1.0f;
-    public static float     CameraSpeed { get { return GameSettings.Instance.m_CameraSpeed; } }
+    public static float     CameraSpeed             { get { return GameSettings.Instance.m_CameraSpeed; } }
 	
 	public bool				m_AsyncSceneLoading		= true;
-	public static bool 		AsyncSceneLoading { get { return GameSettings.Instance.m_AsyncSceneLoading; } }
+	public static bool 		AsyncSceneLoading       { get { return GameSettings.Instance.m_AsyncSceneLoading; } }
 	
 	public bool				m_AdditiveSceneLoading	= true;
-	public static bool 		AdditiveSceneLoading { get { return GameSettings.Instance.m_AdditiveSceneLoading; } }
+	public static bool 		AdditiveSceneLoading    { get { return GameSettings.Instance.m_AdditiveSceneLoading; } }
 	
 	public int				m_MaxNumberOfEnemies	= 10;
-	public static int 		MaxNumberOfEnemies { get { return GameSettings.Instance.m_MaxNumberOfEnemies; } }
+	public static int 		MaxNumberOfEnemies      { get { return GameSettings.Instance.m_MaxNumberOfEnemies; } }
 
 	// Singleton pattern.
 	private static GameSettings m_Instance = null;
-	public static GameSettings Instance { get { return m_Instance; } }
+	public static GameSettings  Instance { get { return m_Instance; } }
 
 	// Use this when the level is loaded
 	void Awake()
@@ -36,7 +36,7 @@ public class GameSettings : MonoBehaviour
 		Object.DontDestroyOnLoad( this );
 		
 		// Avoid any possible stupid error ¬_¬
-		m_MaxNumberOfEnemies    = Mathf.Min( 0, m_MaxNumberOfEnemies );
+		m_MaxNumberOfEnemies = Mathf.Min( 0, m_MaxNumberOfEnemies );
 	}
 	
 	// Use this for initialization
