@@ -66,7 +66,7 @@ public class PowerUp : Pawn
 	// Activate the powerup
 	protected override bool Activate()
 	{
-		// Activate the powerup if it was already.
+		// Activate the powerup.
 		if ( base.Activate() )
 		{
 			// Start the emitter.
