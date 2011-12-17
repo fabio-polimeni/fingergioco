@@ -108,23 +108,11 @@ public class SceneManager : MonoBehaviour
     // Use this when the level is loaded
     void Awake()
     {
-        // Do not destroy the scene manager on loading.
-        //Object.DontDestroyOnLoad(this);
-
-        //m_Instance = this;
-        //m_Roots = new SceneRoot[SceneManager.TotalLevels];
-
-        //// Nothing is loading at the beginning,
-        //// but we have the first scene loaded.
-        //m_SceneLoading = -1;
-        //m_LastLoadedScene = -1;
-        //m_NumberOfLoadedScenes = 0;
     }
 
     // Use this for initialization
     void Start()
     {
-        //SceneManager.LoadSceneByIndex(0, GameSettings.AdditiveSceneLoading, !GameSettings.AsyncSceneLoading);
     }
 
     // Update is called once per frame

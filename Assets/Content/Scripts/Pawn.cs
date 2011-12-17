@@ -23,7 +23,7 @@ public class Pawn : MonoBehaviour
 	// Use this when the level is loaded
 	protected virtual void Awake()
 	{		
-		// Disable the mesh render if exsists.
+		// Disable the mesh render if exists.
 		MeshRenderer meshRenderer = gameObject.GetComponent<MeshRenderer>();
 		if ( meshRenderer )
 		{

@@ -20,6 +20,9 @@ public class Useful : MonoBehaviour
     // Initial particle size
     private float m_InitialParticleSize;
 
+    // Initial color
+    private Color m_InitialColor;
+
     protected ParticleAnimator particleAnimator = null;
     protected ParticleRenderer particleRenderer = null;
 
@@ -69,8 +72,13 @@ public class Useful : MonoBehaviour
             particleAnimator.autodestruct = false;
             particleAnimator.doesAnimateColor = false;
 
-            //m_ShowedFrames = particleRenderer.uvAnimationXTile * particleRenderer.uvAnimationYTile * (int)particleRenderer.uvAnimationCycles;
-            m_ShowedFrames = (particleEmitter.maxEnergy-0.009f);
+            m_ShowedFrames = (particleEmitter.maxEnergy - 0.009f) / particleRenderer.uvAnimationCycles;
+
+            //m_InitialColor = particleRenderer.material.GetColor("_TintColor");
+            //if (m_InitialColor.a == 0.0f)
+            {
+                m_InitialColor = Color.black;
+            }
         }
     }
 
@@ -118,17 +126,16 @@ public class Useful : MonoBehaviour
                     {
                         // Restore idle particle animation.
                         m_IsIdle = true;
-                        
-                        //particleEmitter.emit = true;
-                        particleEmitter.minEnergy = particleEmitter.maxEnergy = 1.0f;
-                        particleEmitter.minEmission = particleEmitter.maxEmission = 1.01f;
+
                         particleEmitter.minSize = particleEmitter.maxSize = m_InitialParticleSize * (6.0f / 4.0f);
 
-                        particleEmitter.Emit(Vector3.zero, Vector3.zero, particleEmitter.maxSize, particleEmitter.maxEnergy, Color.black, ParticlesRotation, 0.0f);
-                        
                         particleRenderer.uvAnimationXTile = 4;
                         particleRenderer.uvAnimationYTile = 4;
                         particleRenderer.material.mainTexture = IdleTexture;
+
+                        particleEmitter.Emit(Vector3.zero, Vector3.zero,
+                           particleEmitter.maxSize, particleEmitter.maxEnergy,
+                           m_InitialColor, ParticlesRotation, 0.0f);
                     }
 
                     m_FramesToShow = 0.0f;
@@ -164,10 +171,12 @@ public class Useful : MonoBehaviour
 	// Activate the powerup
 	protected bool Activate()
 	{
-        if (particleEmitter && particleAnimator)
+        if (particleEmitter && particleRenderer)
         {
             particleEmitter.enabled = true;
-            particleEmitter.Emit(Vector3.zero, Vector3.zero, particleEmitter.maxSize, particleEmitter.maxEnergy, Color.black, ParticlesRotation, 0.0f);
+            particleEmitter.Emit(Vector3.zero, Vector3.zero,
+                   particleEmitter.maxSize, particleEmitter.maxEnergy,
+                   m_InitialColor, ParticlesRotation, 0.0f);
         }
         else
         {

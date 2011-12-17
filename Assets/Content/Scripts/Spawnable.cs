@@ -10,12 +10,44 @@ public class Spawnable : MonoBehaviour
     // Rotation applaied to all particles
     public float ParticlesRotation;
 
+    // Glow texture
+    public Texture GlowTexture;
+
+    // Blow texture
+    public Texture BlowTexture;
+
+    // Enemy
+    public GameObject Enemy;
+
+    // Useful attached object
+    private Useful m_AttachedUseful;
+
+    // Spawn texture
+    private Texture m_SpawnTexture;
+
     // Number of frames showed
-    private float m_ShowTime;
-    private float m_FramesToShow;
+    private float m_AnimationTime;
+    private float m_ElapesedTime;
+
+    // Initial particle size
+    private float m_InitialParticleSize;
+
+    // Initial color
+    private Color m_InitialColor;
 
     // Whether or not it spawned.
-    private bool m_Spawned;
+    private bool m_Glowing;
+    public bool IsGlowing
+    {
+        get { return m_Glowing; }
+    }
+
+    // Whether or not it playing the glow animation
+    private bool m_Blowing;
+    public bool IsBlowing
+    {
+        get { return m_Blowing; }
+    }
 
     protected ParticleAnimator particleAnimator = null;
     protected ParticleRenderer particleRenderer = null;
@@ -39,10 +71,11 @@ public class Spawnable : MonoBehaviour
         gameObject.tag = "Spawnable";
        
         m_IsActive = false;
-        m_Spawned = false;
+        m_Glowing = false;
+        m_Blowing = false;
 
-        m_ShowTime = 0.0f;
-        m_FramesToShow = -1.0f;
+        m_AnimationTime = 0.0f;
+        m_ElapesedTime = 0.0f;
 
         particleAnimator = GetComponent<ParticleAnimator>();
         particleRenderer = GetComponent<ParticleRenderer>();
@@ -51,14 +84,29 @@ public class Spawnable : MonoBehaviour
             particleEmitter.enabled = false;
             particleEmitter.emit = false;
             particleEmitter.useWorldSpace = false;
+
             particleEmitter.minEnergy = particleEmitter.maxEnergy;
+            particleEmitter.minEmission = particleEmitter.maxEmission;
+            m_InitialParticleSize = particleEmitter.minSize = particleEmitter.maxSize;
 
             particleAnimator.autodestruct = false;
             particleAnimator.doesAnimateColor = false;
 
-            //m_ShowTime = particleRenderer.uvAnimationXTile * particleRenderer.uvAnimationYTile * (int)particleRenderer.uvAnimationCycles;
-            m_ShowTime = particleEmitter.maxEnergy / particleRenderer.uvAnimationCycles;
+            m_AnimationTime = particleEmitter.maxEnergy / particleRenderer.uvAnimationCycles;
 
+            m_SpawnTexture = particleRenderer.material.mainTexture;
+
+            //m_InitialColor = particleRenderer.material.GetColor("_TintColor");
+            //if (m_InitialColor.a == 0.0f)
+            {
+                m_InitialColor = Color.black;
+            }
+        }
+
+        // Every spawnable has to be child of an useful.
+        if (transform.parent)
+        {
+            m_AttachedUseful = transform.parent.GetComponent<Useful>();
         }
     }
 
@@ -79,38 +127,78 @@ public class Spawnable : MonoBehaviour
         // In this case we choose the rotation around the y-axsis.
         if (this.IsActive && particleEmitter && particleEmitter.enabled)
         {
-            Particle[] p = new Particle[particleEmitter.particles.Length];
+        //    Particle[] p = new Particle[particleEmitter.particles.Length];
 
-        #if UNITY_EDITOR
-            Debug.Log("Useful::Update: Number of particles: " + particleEmitter.particles.Length);
-        #endif
+        //#if UNITY_EDITOR
+        //    Debug.Log("Useful::Update: Number of particles: " + particleEmitter.particles.Length);
+        //#endif
 
-            for ( int ip = 0; ip < particleEmitter.particles.Length; ++ip )
-            {
-                p[ip] = particleEmitter.particles[ip];
-                p[ip].rotation = ParticlesRotation;
-            }
+        //    for ( int ip = 0; ip < particleEmitter.particles.Length; ++ip )
+        //    {
+        //        p[ip] = particleEmitter.particles[ip];
+        //        p[ip].rotation = ParticlesRotation;
+        //    }
 
-            // Copy back modified particles
-            particleEmitter.particles = p;
+        //    // Copy back modified particles
+        //    particleEmitter.particles = p;
 
             // Increment the frame time.
-            if ((m_ShowTime > 0.0f) && (m_FramesToShow < m_ShowTime))
+            if ((m_AnimationTime > 0.0f) && (m_ElapesedTime < m_AnimationTime))
             {
-                m_FramesToShow += Time.deltaTime;
-                if (m_FramesToShow >= m_ShowTime)
+                m_ElapesedTime += Time.deltaTime;
+                if (m_ElapesedTime >= m_AnimationTime)
                 {
-                    Deactivate();
+                    // If is not already spawning, that is, using the glow animation
+                    if (!IsGlowing)
+                    {
+                        // Once we finished the spawning animation,
+                        // we want to activate the glow one.
+                        // We just need  to swap the tiled texture of
+                        // particle renderer's material.
+                        if (particleRenderer && GlowTexture)
+                        {
+                            particleRenderer.material.mainTexture = GlowTexture;
 
-                    // Reinitialise the frame time, 
-                    // and signal it has spawned.
-                    m_Spawned = true;
+                            particleEmitter.minSize = particleEmitter.maxSize = m_InitialParticleSize;
 
-                    // TODO: Change the emitter material texture with he glowed one.
+                            particleEmitter.Emit(Vector3.zero, Vector3.zero,
+                                particleEmitter.maxSize, particleEmitter.maxEnergy,
+                                m_InitialColor, ParticlesRotation, 0.0f);
+
+                            m_Glowing = true;
+                            m_Blowing = false;
+                        }
+                    }
+                    else if (!IsBlowing)
+                    {
+                        // Create the enemy.
+                        if (Enemy)
+                        {
+                            GameObject.Instantiate(Enemy,transform.position,Quaternion.identity);
+                        }
+                        
+                        // Blow up the spawnable.
+                        if (particleRenderer && BlowTexture)
+                        {
+                            particleRenderer.material.mainTexture = BlowTexture;
+                            particleEmitter.Emit(Vector3.zero, Vector3.zero,
+                                particleEmitter.maxSize, particleEmitter.maxEnergy,
+                                m_InitialColor, ParticlesRotation, 0.0f);
+                        }
+
+                        m_Glowing = true;
+                        m_Blowing = true;
+                    }
+                    else
+                    {
+                        Deactivate();
+
+                        m_Glowing = false;
+                        m_Blowing = false;
+                    }
+
+                    m_ElapesedTime = 0.0f;
                 }
-
-                // TODO: if m_Spawned is true and it is the
-                //       right time, then, spawn the enemy.
             }
         }
 	}
@@ -123,17 +211,7 @@ public class Spawnable : MonoBehaviour
 	// Something entered the collider
 	void OnTriggerEnter(Collider other)
 	{
-		// If the player has entered its area,
-		// then, start the spawn effect.
-		if ( other.gameObject.tag == "Finger" )
-		{
-			// Active it if is not yet.
-            if ( ((m_FramesToShow < 0.0f) || m_Spawned) && !IsActive )
-			{
-                m_FramesToShow = 0.0f;
-				this.Activate();
-			}
-		}
+
 	}
 
     // Something is inside the collider
@@ -143,12 +221,7 @@ public class Spawnable : MonoBehaviour
         // then, start the spawn effect.
         if (other.gameObject.tag == "Finger")
         {
-            // Active it if is not yet.
-            if (((m_FramesToShow < 0.0f) || m_Spawned) && !IsActive)
-            {
-                m_FramesToShow = 0.0f;
-                this.Activate();
-            }
+            this.Activate();
         }
     }
 
@@ -161,18 +234,24 @@ public class Spawnable : MonoBehaviour
 	{
         if (this.IsActive == false)
         {
-            particleAnimator = GetComponent<ParticleAnimator>();
-            if (particleEmitter && particleAnimator)
+            if (m_AttachedUseful && m_AttachedUseful.IsIdle)
             {
-                particleEmitter.enabled = true;
-                particleEmitter.emit = true;
-            }
-            else
-            {
-                return false;
-            }
+                if (particleEmitter && particleRenderer)
+                {
+                    particleEmitter.enabled = true;
 
-            m_IsActive = true;
+                    particleRenderer.material.mainTexture = m_SpawnTexture;
+                    particleEmitter.Emit(Vector3.zero, Vector3.zero,
+                        particleEmitter.maxSize, particleEmitter.maxEnergy,
+                        m_InitialColor, ParticlesRotation, 0.0f);
+                }
+                else
+                {
+                    return false;
+                }
+
+                m_IsActive = true;
+            }
         }
 
         return m_IsActive;
@@ -199,4 +278,6 @@ public class Spawnable : MonoBehaviour
 	{
 	}
 
+
+    public bool Blowing { get; set; }
 }

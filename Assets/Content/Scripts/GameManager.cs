@@ -7,8 +7,12 @@ public class GameManager : MonoBehaviour
 
     private GameObject m_Finger;
     private Finger m_FingerComponent;
+    public static GameObject Finger
+    {
+        get { return GameManager.Instance.m_Finger; }
+    }
 
-    // Singleton pattern.
+    // Singleton pattern
     private static GameManager m_Instance = null;
     public static GameManager Instance  { get { return m_Instance; } }
 
@@ -65,7 +69,7 @@ public class GameManager : MonoBehaviour
 
             if (createActor)
             {
-                // Instantiate the new actor.
+                // Instantiate the new actor
                 m_Finger = (GameObject)Object.Instantiate(FingerPrefab, hitPoint, Quaternion.identity);
                 m_FingerComponent = m_Finger.GetComponent<Finger>();
 
@@ -77,7 +81,7 @@ public class GameManager : MonoBehaviour
             #endif
             }
         }
-        // We move the camera only if the pawn is not spawning.
+        // We move the camera only if the pawn is not spawning
         else if (m_Finger && m_FingerComponent && m_FingerComponent.IsActive)
         {
             // Move the camera along z-axis only.
