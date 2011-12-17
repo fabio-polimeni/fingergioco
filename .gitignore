@@ -21,3 +21,4 @@
 /Backup*/
 /UpgradeLog*.XML
 /fingergioco-x64-release_Data/
+/*.csproj.user
