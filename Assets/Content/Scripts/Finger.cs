@@ -41,18 +41,18 @@ public class Finger : Pawn
 		// Calculate the movement due to the stationary position
 		// of the finger, which the actor tends to approach.
 		// If the camera is orthographic, calculation can be easier.
-		if ( Camera.main.isOrthoGraphic )
+		if ( SceneManager.CurrentCamera.isOrthoGraphic )
 		{
-			Vector3 reachPoint = Camera.main.ScreenToWorldPoint(
-				new Vector3( Input.mousePosition.x, Input.mousePosition.y, Camera.main.far ) );
+			Vector3 reachPoint = SceneManager.CurrentCamera.ScreenToWorldPoint(
+				new Vector3( Input.mousePosition.x, Input.mousePosition.y, SceneManager.CurrentCamera.far ) );
 
 			Vector3 approachMov = new Vector3(reachPoint.x,transform.localPosition.y,reachPoint.z);
 			movement = (approachMov - transform.localPosition) * approachSpeed;
 		}
 		else
 		{
-			Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
-			RaycastHit[] hits = Physics.RaycastAll (ray, Camera.main.far);
+			Ray ray = SceneManager.CurrentCamera.ScreenPointToRay (Input.mousePosition);
+			RaycastHit[] hits = Physics.RaycastAll (ray, SceneManager.CurrentCamera.far);
 			foreach (RaycastHit hit in hits)
 			{
 				if (hit.transform.tag == "Base Surface")

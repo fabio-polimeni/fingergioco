@@ -10,18 +10,31 @@ public class Useful : MonoBehaviour
     // Rotation applaied to all particles
     public float ParticlesRotation;
 
+    // Idle texture
+    public Texture IdleTexture;
+
     // Number of frames showed
     private float m_ShowedFrames;
     private float m_FramesToShow;
 
+    // Initial particle size
+    private float m_InitialParticleSize;
+
     protected ParticleAnimator particleAnimator = null;
     protected ParticleRenderer particleRenderer = null;
 
-    // Returns whether the pawn is active or not
+    // Returns whether useful is active
     protected bool m_IsActive;
     public bool IsActive
     {
         get { return m_IsActive; }
+    }
+
+    // Returns whether the useful is in idle
+    protected bool m_IsIdle;
+    public bool IsIdle
+    {
+        get { return m_IsIdle; }
     }
 
 	/// <summary>
@@ -32,28 +45,32 @@ public class Useful : MonoBehaviour
 	void Awake()
 	{
 		// Set layer and tag
-		gameObject.layer = LayerMask.NameToLayer("Friend");
+		gameObject.layer = LayerMask.NameToLayer("Enemy");
         gameObject.tag = "Useful";
+        
         m_IsActive = false;
+        m_IsIdle = false;
 
         m_ShowedFrames = 0.0f;
         m_FramesToShow = 0.0f;
 
-        ParticleAnimator particleAnimator = GetComponent<ParticleAnimator>();
-        ParticleRenderer particleRenderer = GetComponent<ParticleRenderer>();
+        particleAnimator = GetComponent<ParticleAnimator>();
+        particleRenderer = GetComponent<ParticleRenderer>();
         if (particleEmitter && particleAnimator && particleRenderer)
         {
             particleEmitter.enabled = false;
             particleEmitter.emit = false;
             particleEmitter.useWorldSpace = false;
+
             particleEmitter.minEnergy = particleEmitter.maxEnergy;
+            particleEmitter.minEmission = particleEmitter.maxEmission;
+            m_InitialParticleSize = particleEmitter.minSize = particleEmitter.maxSize;
 
             particleAnimator.autodestruct = false;
             particleAnimator.doesAnimateColor = false;
 
             //m_ShowedFrames = particleRenderer.uvAnimationXTile * particleRenderer.uvAnimationYTile * (int)particleRenderer.uvAnimationCycles;
-            m_ShowedFrames = particleEmitter.maxEnergy / particleRenderer.uvAnimationCycles;
-
+            m_ShowedFrames = (particleEmitter.maxEnergy-0.009f);
         }
     }
 
@@ -70,31 +87,51 @@ public class Useful : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-        // We want to rotate all particles by  given angle.
+        // We want to rotate all particles by a given angle.
         // In this case we choose the rotation around the y-axsis.
-        if (this.IsActive && particleEmitter && particleEmitter.emit)
+        if (this.IsActive && particleEmitter && particleEmitter.enabled)
         {
-            Particle[] p = new Particle[particleEmitter.particles.Length];
+            //if (this.m_IsIdle)
+            //{
+            //    Particle[] p = new Particle[particleEmitter.particles.Length];
 
-        #if UNITY_EDITOR
-            Debug.Log("Useful::Update: Number of particles: " + particleEmitter.particles.Length);
-        #endif
+            //    for (int ip = 0; ip < particleEmitter.particles.Length; ++ip)
+            //    {
+            //        p[ip] = particleEmitter.particles[ip];
+            //        p[ip].rotation = ParticlesRotation;
+            //    }
 
-            for ( int ip = 0; ip < particleEmitter.particles.Length; ++ip )
-            {
-                p[ip] = particleEmitter.particles[ip];
-                p[ip].rotation = ParticlesRotation;
-            }
-
-            // Copy back modified particles
-            particleEmitter.particles = p;
+            //    // Copy back modified particles
+            //    particleEmitter.particles = p;
+            //}
 
             if ((m_ShowedFrames > 0.0f) && (m_FramesToShow < m_ShowedFrames))
             {
                 m_FramesToShow += Time.deltaTime;
                 if (m_FramesToShow >= m_ShowedFrames)
                 {
-                    Deactivate();
+                    // Once we finished the spawning animation,
+                    // we want to activate the idle one.
+                    // We just need  to swap the tiled texture of
+                    // particle renderer's material.
+                    if (particleRenderer && IdleTexture)
+                    {
+                        // Restore idle particle animation.
+                        m_IsIdle = true;
+                        
+                        //particleEmitter.emit = true;
+                        particleEmitter.minEnergy = particleEmitter.maxEnergy = 1.0f;
+                        particleEmitter.minEmission = particleEmitter.maxEmission = 1.01f;
+                        particleEmitter.minSize = particleEmitter.maxSize = m_InitialParticleSize * (6.0f / 4.0f);
+
+                        particleEmitter.Emit(Vector3.zero, Vector3.zero, particleEmitter.maxSize, particleEmitter.maxEnergy, Color.black, ParticlesRotation, 0.0f);
+                        
+                        particleRenderer.uvAnimationXTile = 4;
+                        particleRenderer.uvAnimationYTile = 4;
+                        particleRenderer.material.mainTexture = IdleTexture;
+                    }
+
+                    m_FramesToShow = 0.0f;
                 }
             }
         }
@@ -103,16 +140,6 @@ public class Useful : MonoBehaviour
     // Something exited the collider
     void OnTriggerExit(Collider other)
     {
-        // If the player has exited its area,
-        // then, stop the spawn effect.
-        //if (other.gameObject.tag == "Finger")
-        //{
-        //    // Deactivate it if is not yet.
-        //    if (this.IsActive == true)
-        //    {
-        //        this.Deactivate();
-        //    }
-        //}
     }
 	
 	// Something entered the collider
@@ -137,11 +164,10 @@ public class Useful : MonoBehaviour
 	// Activate the powerup
 	protected bool Activate()
 	{
-        ParticleAnimator particleAnimator = GetComponent<ParticleAnimator>();
         if (particleEmitter && particleAnimator)
         {
             particleEmitter.enabled = true;
-            particleEmitter.emit = true;
+            particleEmitter.Emit(Vector3.zero, Vector3.zero, particleEmitter.maxSize, particleEmitter.maxEnergy, Color.black, ParticlesRotation, 0.0f);
         }
         else
         {

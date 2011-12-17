@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        SceneManager.LoadSceneByIndex(0, GameSettings.AdditiveSceneLoading, !GameSettings.AsyncSceneLoading);
     }
 
     // Update is called once per frame
@@ -38,18 +39,18 @@ public class GameManager : MonoBehaviour
             Vector3 hitPoint = new Vector3(0.0f, 0.0f, 0.0f);
 
             // If the camera is orthographic, calculation can be easier.
-            if (Camera.main.isOrthoGraphic)
+            if (SceneManager.CurrentCamera.isOrthoGraphic)
             {
-                hitPoint = Camera.main.ScreenToWorldPoint(
-                    new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.far));
+                hitPoint = SceneManager.CurrentCamera.ScreenToWorldPoint(
+                    new Vector3(Input.mousePosition.x, Input.mousePosition.y, SceneManager.CurrentCamera.far));
 
                 hitPoint.y = FingerPrefab.transform.localPosition.y;
                 createActor = true;
             }
             else
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit[] hits = Physics.RaycastAll(ray, Camera.main.far);
+                Ray ray = SceneManager.CurrentCamera.ScreenPointToRay(Input.mousePosition);
+                RaycastHit[] hits = Physics.RaycastAll(ray, SceneManager.CurrentCamera.far);
                 foreach (RaycastHit hit in hits)
                 {
                     if (hit.transform.tag == "Base Surface")
@@ -83,8 +84,8 @@ public class GameManager : MonoBehaviour
             if (Input.GetMouseButton(0))
             {
                 // Get the new camera translation from the finger position.
-                Vector3 cameraTranslation = new Vector3(0.0f, 0.0f, (m_Finger.transform.localPosition.z - Camera.main.transform.localPosition.z));
-                Camera.main.transform.localPosition += cameraTranslation * GameSettings.CameraSpeed;
+                Vector3 cameraTranslation = new Vector3(0.0f, 0.0f, (m_Finger.transform.localPosition.z - SceneManager.CurrentCamera.transform.localPosition.z));
+                SceneManager.CurrentCamera.transform.localPosition += cameraTranslation * GameSettings.CameraSpeed;
 
             //#if UNITY_EDITOR
             //    Debug.Log("SceneManager.Roots[SceneManager.CurrentScene]: " + SceneManager.Roots[SceneManager.CurrentScene]
