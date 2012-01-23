@@ -7,9 +7,26 @@ public class GameManager : MonoBehaviour
 
     private GameObject m_Finger;
     private Finger m_FingerComponent;
+    public static Finger FingerComponent
+    {
+        get { return GameManager.Instance.m_FingerComponent; }
+    }
+
     public static GameObject Finger
     {
         get { return GameManager.Instance.m_Finger; }
+        set
+        {
+            GameManager.Instance.m_Finger = value;
+            if (GameManager.Instance.m_Finger)
+            {
+                GameManager.Instance.m_FingerComponent = GameManager.Instance.m_Finger.GetComponent<Finger>();
+            }
+            else
+            {
+                GameManager.Instance.m_FingerComponent = null;
+            }
+        }
     }
 
     // Singleton pattern
@@ -21,6 +38,7 @@ public class GameManager : MonoBehaviour
     {
         m_Instance = this;
         m_Finger = null;
+        m_FingerComponent = null;
 
         Object.DontDestroyOnLoad(this);
     }
@@ -37,7 +55,10 @@ public class GameManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             // Destroy the main actor if exists
-            DestoryPawn(m_Finger);
+            if (m_Finger && m_FingerComponent)
+            {
+                m_FingerComponent.Kill();
+            }
 
             bool createActor = false;
             Vector3 hitPoint = new Vector3(0.0f, 0.0f, 0.0f);
@@ -100,26 +121,6 @@ public class GameManager : MonoBehaviour
                 SceneManager.UnloadSceneByIndex(SceneManager.CurrentScene - 2);
                 SceneManager.LoadSceneByIndex(SceneManager.CurrentScene - 1, GameSettings.AdditiveSceneLoading, !GameSettings.AsyncSceneLoading);
                 SceneManager.UnloadSceneByIndex(SceneManager.CurrentScene + 2);
-            }
-        }
-    }
-
-    // Destroy the main actor
-    public void DestoryPawn(GameObject gameObject)
-    {
-        // If an other actor already exists, then, we need to destroy it.
-        if (gameObject)
-        {
-            Pawn pawn = (Pawn)gameObject.GetComponent<Pawn>();
-            if (pawn)
-            {
-                pawn.Kill();
-            }
-
-            Object.Destroy(gameObject);
-            if (gameObject == m_Finger)
-            {
-                m_Finger = null;
             }
         }
     }

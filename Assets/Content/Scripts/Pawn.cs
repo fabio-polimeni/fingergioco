@@ -115,6 +115,7 @@ public class Pawn : MonoBehaviour
 	// Kill the actor
 	public virtual void Kill()
 	{
+        Object.Destroy(gameObject);
 	}
 	
 	// Returns whether the pawn is active or not

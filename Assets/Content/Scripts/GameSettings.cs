@@ -24,6 +24,15 @@ public class GameSettings : MonoBehaviour
 	
 	public int				m_MaxNumberOfEnemies	= 10;
 	public static int 		MaxNumberOfEnemies      { get { return GameSettings.Instance.m_MaxNumberOfEnemies; } }
+	
+	public float			m_SurfaceLevelAxis		= 0.0f;
+	public static	float 	SurfaceLevelAxis       	{ get { return GameSettings.Instance.m_SurfaceLevelAxis; } }
+	
+	public float			m_DecoLevelAxis			= 0.1f;
+	public static	float 	DecoLevelAxis       	{ get { return GameSettings.Instance.m_DecoLevelAxis; } }
+	
+	public float			m_PlayerLevelAxis		= 0.2f;
+	public static	float 	PlayerLevelAxis       	{ get { return GameSettings.Instance.m_PlayerLevelAxis; } }
 
 	// Singleton pattern.
 	private static GameSettings m_Instance = null;

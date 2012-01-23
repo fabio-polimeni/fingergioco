@@ -3,10 +3,30 @@ using System.Collections;
 
 public class Finger : Pawn
 {
+	protected ParticleAnimator particleAnimator = null;
+    protected ParticleRenderer particleRenderer = null;
+
 	private bool	m_IsDying;
 	private bool 	m_IsSpawning;
 
 	private	float	m_Size;
+    public  float   Size
+    {
+        get { return m_Size; }
+    }
+
+    private float   m_Energy;
+    public  float   Energy
+    {
+        get { return m_Energy; }
+        set
+		{
+			if ( !m_IsSpawning && !m_IsDying )
+			{
+				m_Energy = value;
+			}
+		}
+    }
 
 	public 	float	spawnRate;
 	public 	float	dieRate;
@@ -17,13 +37,18 @@ public class Finger : Pawn
 	protected override void Awake()
 	{
 		base.Awake();
-		Spawn();
+
+		particleAnimator = GetComponent<ParticleAnimator>();
+        particleRenderer = GetComponent<ParticleRenderer>();
 		
 		// Set the player layer
 		gameObject.layer = LayerMask.NameToLayer("Player");
 		
-		// We want this object to persistent across the levels
+		// We want this object to be persistent across the levels
 		Object.DontDestroyOnLoad( this );
+		
+		// Spawn the finger
+		Spawn();
 	}
 
 	// Use this for initialization
@@ -104,6 +129,13 @@ public class Finger : Pawn
 		
 		// Deactivate the player.
 		this.Deactivate();
+		
+		Particle[] particles = null;
+		if ( particleEmitter )
+		{
+			// Store finger's particles.
+		    particles = particleEmitter.particles;
+		}
 
 		// We keep active the pawn until the mouse button is pressed
 		if ( Input.GetMouseButton(0) )
@@ -111,15 +143,29 @@ public class Finger : Pawn
 			// Until we reach the 100% in size we keep resizing
 			if ( m_Size < finalSize )
 			{
-				m_Size += spawnRate;
+				m_Size += spawnRate;				
+				if ( m_Size < finalSize )
+				{
+					m_IsSpawning = true;
+				}
+				else
+				{
+					m_IsSpawning = false;
+                    m_Size = finalSize;
+				}
 				
 				// The transform component is always present, therefore,
 				// we don't need to check whether or not it exists.
 				transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
-				
-				if ( m_Size < finalSize )
+					
+				// This check shouldn't be necessary
+				if ( particles != null )
 				{
-					m_IsSpawning = true;
+					// Resize the finger's particle system.
+		            for (int ip = 0; ip < particles.Length; ++ip)
+		            {
+						particles[ip].size = m_Size;
+		            }
 				}
 			}
 
@@ -128,8 +174,8 @@ public class Finger : Pawn
 			{
 				this.Activate();
 				
-                // Move tha actor is regardelss whether or
-                // not is has got a rigid-body component.
+                // Move tha actor regardelss whether or
+                // not it has got a rigid-body component.
 				//if ( rigidbody == null )
 				{
 					Move( ApproachPoint() );
@@ -143,16 +189,52 @@ public class Finger : Pawn
 			if ( m_Size > 0.0f )
 			{
 				m_Size -= dieRate;
-				transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
 				m_IsDying = true;
+				
+				if ( m_Size < 0.0f )
+				{
+					m_Size = 0.0f;
+				}
+				
+				transform.localScale = new Vector3( m_Size, transform.localScale.y, m_Size );
+				
+				// This check shouldn't be necessary
+				if ( particles != null )
+				{
+					// Resize the finger's particle system.
+		            for (int ip = 0; ip < particles.Length; ++ip)
+		            {
+						particles[ip].size = m_Size;
+		            }
+				}
 			}
+		}
 
-			// Kill the actor if necessary
-			if ( m_Size <= 0.0f )
+        // Kill the actor if necessary
+        if ((m_Size <= 0.0f) || (m_Energy <= 0.0f))
+        {
+            m_IsDying = false;
+            this.Kill();
+        }
+		else if ( !m_IsSpawning && !m_IsDying )
+		{
+			// This check shouldn't be necessary
+			if ( particles != null )
 			{
-				GameManager.Instance.DestoryPawn( this.gameObject );
-				m_IsDying = false;
+				// Change the alpha according to the energy left.
+		        for (int ip = 0; ip < particles.Length; ++ip)
+		        {
+					particles[ip].color = Color.yellow;
+					Color particleColor = particles[ip].color;
+					particles[ip].color = new Color(particleColor.r,particleColor.g,particleColor.b, Mathf.Max(0.2f,m_Energy));
+		        }
 			}
+		}
+		
+		if ( particles != null )
+		{
+			// Copy back modified particles
+		    particleEmitter.particles = particles;
 		}
 	}
 	
@@ -161,10 +243,11 @@ public class Finger : Pawn
 	{
 		base.Spawn();
 		
-		m_Size			= 0.0f;
+		m_Size = 0.0f;
+        m_Energy = 1.0f;
 		
-		m_IsSpawning	= false;
-		m_IsDying		= false;
+		m_IsSpawning = false;
+		m_IsDying = false;
 		
 		// Deactivate the player.
 		this.Deactivate();
@@ -184,7 +267,11 @@ public class Finger : Pawn
 	// Kill the actor
 	public override void Kill()
 	{
-		base.Kill();
+        GameManager.Finger = null;
+
+        m_Size = 0.0f;
+        m_Energy = 0.0f;
+        base.Kill();
 	}
 	
 	public bool IsDying

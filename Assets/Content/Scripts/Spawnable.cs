@@ -174,7 +174,9 @@ public class Spawnable : MonoBehaviour
                         // Create the enemy.
                         if (Enemy)
                         {
-                            GameObject.Instantiate(Enemy,transform.position,Quaternion.identity);
+                            Vector3 enemyPosition = transform.position;
+                            enemyPosition.y = 0.1f;
+                            GameObject.Instantiate(Enemy,enemyPosition, Quaternion.identity);
                         }
                         
                         // Blow up the spawnable.
