@@ -37,12 +37,17 @@ public class Pawn : MonoBehaviour
 	}
 	
 	// Update physics
-	protected virtual void FixedUpdate()
+	protected virtual void FixedUpdate ()
 	{
 	}
 	
 	// Update is called once per frame
 	protected virtual void Update ()
+	{	
+	}
+	
+	// LateUpdate is called once per frame
+	protected virtual void LateUpdate ()
 	{	
 	}
 	
@@ -123,4 +128,5 @@ public class Pawn : MonoBehaviour
 	{
 		get { return m_IsActive; }
 	}
+
 }

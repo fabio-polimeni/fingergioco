@@ -41,6 +41,12 @@ public class PowerUp : Pawn
 		base.Update();
 	}
 	
+	// LateUpdate is called once per frame
+	protected override void LateUpdate ()
+	{
+		base.LateUpdate();
+	}
+	
 	// Something entered the collider
 	void OnTriggerEnter( Collider other )
 	{
@@ -67,14 +73,13 @@ public class PowerUp : Pawn
 	protected override bool Activate()
 	{
 		// Activate the powerup.
-		if ( base.Activate() )
-		{
-			// Start the emitter.
-			particleEmitter.emit = true;
-			return true;
-		}
-		
-		return false;
+		return base.Activate();
+	}
+	
+	// Deactivate the poweup.
+	protected override bool Deactivate()
+	{
+		return base.Deactivate();
 	}
 	
 	// Move the pawn
@@ -100,4 +105,5 @@ public class PowerUp : Pawn
 	{
 		base.Kill();
 	}
+
 }

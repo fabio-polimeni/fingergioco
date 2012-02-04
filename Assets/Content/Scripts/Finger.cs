@@ -23,7 +23,28 @@ public class Finger : Pawn
 		{
 			if ( !m_IsSpawning && !m_IsDying )
 			{
-				m_Energy = value;
+				m_Energy += value;
+				if ( m_Energy < 0.0f )
+				{
+					m_Energy = 0.0f;
+				}
+			}
+		}
+    }
+	
+	private float	m_Score;
+    public  float  	Score
+    {
+        get { return m_Score; }
+        set
+		{
+			if ( !m_IsSpawning && !m_IsDying )
+			{
+				m_Score += value;
+				if ( m_Score < 0.0f )
+				{
+					m_Score = 0.0f;
+				}
 			}
 		}
     }
@@ -32,6 +53,11 @@ public class Finger : Pawn
 	public 	float	dieRate;
 	public	float	rotationRate;
 	public	float	approachSpeed;
+	
+	// Each scoreTime (in seconds) the score will is increased by 1 times scoreRate.
+	public	float	scoreTime;
+	public	float 	scoreRate;
+	private float	m_IncTime;
 	
 	// Use this when the level is loaded
 	protected override void Awake()
@@ -213,7 +239,7 @@ public class Finger : Pawn
         // Kill the actor if necessary
         if ((m_Size <= 0.0f) || (m_Energy <= 0.0f))
         {
-            m_IsDying = false;
+            //m_IsDying = false;
             this.Kill();
         }
 		else if ( !m_IsSpawning && !m_IsDying )
@@ -229,6 +255,14 @@ public class Finger : Pawn
 					particles[ip].color = new Color(particleColor.r,particleColor.g,particleColor.b, Mathf.Max(0.2f,m_Energy));
 		        }
 			}
+			
+			// Increment the score if necessary
+			m_IncTime += Time.deltaTime;
+			if ( m_IncTime >= scoreTime )
+			{
+				this.Score = 1*scoreRate;
+				m_IncTime = 0.0f;
+			}
 		}
 		
 		if ( particles != null )
@@ -238,6 +272,15 @@ public class Finger : Pawn
 		}
 	}
 	
+	// Gui
+	void OnGUI()
+	{
+		string scoreString = "Score: " + m_Score.ToString("F2");
+		GUI.Label(new Rect(10, 10, 10 * scoreString.Length, 20), scoreString);
+		string energyString = "Energy: " + m_Energy.ToString("P1");
+		GUI.Label(new Rect(10, 25, 10*energyString.Length, 20), energyString);
+	}
+	
 	// Spawn the actor, and initialise the size.
 	public override void Spawn()
 	{
@@ -245,6 +288,7 @@ public class Finger : Pawn
 		
 		m_Size = 0.0f;
         m_Energy = 1.0f;
+		m_Score = 0.0f;
 		
 		m_IsSpawning = false;
 		m_IsDying = false;
@@ -262,6 +306,10 @@ public class Finger : Pawn
 
 		// Clamp the approach speed.
 		approachSpeed = Mathf.Clamp01( approachSpeed );
+		
+		// Clamp the score time.
+		scoreTime = Mathf.Max( 0.0f, scoreTime );
+		scoreRate = Mathf.Max( 0, scoreRate );
 	}
 	
 	// Kill the actor
@@ -271,6 +319,9 @@ public class Finger : Pawn
 
         m_Size = 0.0f;
         m_Energy = 0.0f;
+		m_Score = 0.0f;
+		m_IncTime = 0.0f;
+
         base.Kill();
 	}
 	
@@ -283,4 +334,5 @@ public class Finger : Pawn
 	{
 		get { return m_IsSpawning; }
 	}
+
 }

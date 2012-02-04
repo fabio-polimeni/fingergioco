@@ -103,15 +103,15 @@ public class Pollen : Enemy
                 Vector3 displacement = GameManager.Finger.transform.position - particle.position;
                 float distance = displacement.magnitude;
 				
-				particle.color = Color.white;
+				//particle.color = Color.white;
 				
 				// Handle attraction
                 if (AttractionForce > 0.0f && AttractionRange > 0.0f)
                 {
-					particle.color = Color.magenta;
+					//particle.color = Color.magenta;
                     if (distance <= (GameManager.FingerComponent.Size + (particle.size + particle.size * AttractionRange)) * 0.5f)
                     {
-                        particle.color = Color.green;
+                        //particle.color = Color.green;
 
                         // Add to the current velocity a velocity vector in direction of the finger.
                         float speed = particle.velocity.magnitude;
@@ -124,7 +124,7 @@ public class Pollen : Enemy
 				// Handle collision
 				if (distance <= (GameManager.FingerComponent.Size + particle.size*CollisionScale) * 0.5f)
                 {
-                    particle.color = Color.red;
+                    //particle.color = Color.red;
 					
 					// Apply damage according to the current liftime of the particle.
 					float lifetime = 1.0f - particle.energy/particle.startEnergy;
