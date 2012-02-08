@@ -33,6 +33,19 @@ public class GameSettings : MonoBehaviour
 	
 	public float			m_PlayerLevelAxis		= 0.2f;
 	public static	float 	PlayerLevelAxis       	{ get { return GameSettings.Instance.m_PlayerLevelAxis; } }
+	
+	public float			m_DifficultyDeltaTime	= 3.0f;
+	public static	float 	DifficultyDeltaTime   	{ get { return GameSettings.Instance.m_DifficultyDeltaTime; } }
+	
+	// How much the diffculty will be incresed every DifficultyDeltaTime 
+	public float			m_DifficultyStep		= 0.5f;
+	public static	float 	DifficultyStep      	{ get { return GameSettings.Instance.m_DifficultyStep; } }
+	
+	public	float			m_ScoreDeltaTime		= 0.2f;
+	public static	float 	ScoreDeltaTime   		{ get { return GameSettings.Instance.m_ScoreDeltaTime; } }
+	
+	public	float 			m_ScoreIncRate			= 0.1f;
+	public static	float 	ScoreIncRate   			{ get { return GameSettings.Instance.m_ScoreIncRate; } }
 
 	// Singleton pattern.
 	private static GameSettings m_Instance = null;
@@ -46,6 +59,17 @@ public class GameSettings : MonoBehaviour
 		
 		// Avoid any possible stupid error ¬_¬
 		m_MaxNumberOfEnemies = Mathf.Min( 0, m_MaxNumberOfEnemies );
+		
+		// Difficulty
+		m_DifficultyDeltaTime = Mathf.Max( 0.0f, m_DifficultyDeltaTime );
+		m_DifficultyStep = Mathf.Max( 0.0f, m_DifficultyStep );
+		
+		// Scoring
+		m_ScoreDeltaTime = Mathf.Max( 0.0f, m_ScoreDeltaTime );
+		m_ScoreIncRate = Mathf.Max( 0.0f, m_ScoreIncRate );
+		
+		// Levels
+		//m_MaxNumberOfLevels = Mathf.Max( 3, m_MaxNumberOfLevels );
 	}
 	
 	// Use this for initialization

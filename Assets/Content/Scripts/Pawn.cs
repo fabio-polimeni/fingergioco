@@ -24,11 +24,11 @@ public class Pawn : MonoBehaviour
 	protected virtual void Awake()
 	{		
 		// Disable the mesh render if exists.
-		MeshRenderer meshRenderer = gameObject.GetComponent<MeshRenderer>();
-		if ( meshRenderer )
-		{
-			Object.Destroy( meshRenderer );
-		}
+		//MeshRenderer meshRenderer = gameObject.GetComponent<MeshRenderer>();
+		//if ( meshRenderer )
+		//{
+		//	Object.Destroy( meshRenderer );
+		//}
 	}
 
 	// Use this for initialization

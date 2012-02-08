@@ -136,7 +136,17 @@ public class Useful : MonoBehaviour
                         particleEmitter.Emit(Vector3.zero, Vector3.zero,
                            particleEmitter.maxSize, particleEmitter.maxEnergy,
                            m_InitialColor, ParticlesRotation, 0.0f);
-                    }
+						
+						// We also want to activate all fruits associated with it.
+						Fruit[] fruits = this.GetComponentsInChildren<Fruit>();
+				        foreach (Fruit fruit in fruits)
+				        {
+				            if ( fruit.gameObject.particleEmitter )
+							{
+								fruit.gameObject.particleEmitter.emit = true;
+							}
+				        }
+					}
 
                     m_FramesToShow = 0.0f;
                 }

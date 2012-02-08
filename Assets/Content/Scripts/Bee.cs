@@ -23,8 +23,8 @@ public class Bee : Enemy
     // Force to apply to particles in finger direction.
     public float ForceStep;
 	
-	// Threshold under which the bee will turn and prick you with the sting.
-	public float StingRange;
+	// Attack speed.
+	public float AttackSpeed;
 	
 	// Damage percentage to apply when particles collide.
 	// It will be scaled by the particle's size factor.
@@ -53,7 +53,7 @@ public class Bee : Enemy
 		CollisionScale = Mathf.Clamp01(CollisionScale);
 		AttractionRange = Mathf.Max(0.0f,AttractionRange);
 		AttractionForce = Mathf.Clamp01(AttractionForce);
-		StingRange = Mathf.Max(0.0f,StingRange);
+		AttackSpeed = Mathf.Max(0.0f,AttackSpeed);
 		ForceStep = Mathf.Max(0.0f,ForceStep);
 		Damage = Mathf.Max(0.0f,Damage);
 		
@@ -103,9 +103,6 @@ public class Bee : Enemy
         // Iterate all over particles.
         Particle[] p = particleEmitter.particles;
 		
-		// Sting flag
-		bool useSting = false;
-		
         for (int ip = 0; ip < particleEmitter.particles.Length; ++ip)
         {
             Particle particle = p[ip];
@@ -131,16 +128,10 @@ public class Bee : Enemy
                         float speed = particle.velocity.magnitude;
 						particle.velocity =
 							particle.velocity.normalized * speed * (1.0f - AttractionForce)
-							+ moveDirection.normalized * AttractionForce * (distance + StingRange);
+							+ moveDirection.normalized * AttractionForce * (distance + AttackSpeed);
                     }
                 }
-				
-				// Handle sting
-				if (distance <= ((GameManager.FingerComponent.Size + particle.size) * 0.5f) + StingRange )
-				{
-					useSting = true;
-				}
-                
+				                
 				// Handle collision
 				if (distance <= (GameManager.FingerComponent.Size + particle.size*CollisionScale) * 0.5f)
                 {
@@ -155,17 +146,7 @@ public class Bee : Enemy
 			// Handle rotation
 			Vector3 velocity = particle.velocity.normalized;
 			float sign = Mathf.Sign(Vector3.Dot(velocity,Vector3.right));
-			
-			// Change sign if the bee is close enough
-			if ( useSting )
-			{
-				particle.rotation = sign*Vector3.Angle(velocity,Vector3.forward);
-			}
-			else
-			{
-				particle.rotation = sign*Vector3.Angle(velocity,Vector3.forward);
-			}
-			
+			particle.rotation = sign*Vector3.Angle(velocity,Vector3.forward);
 
 			// Copy back modified particle.
             p[ip] = particle;

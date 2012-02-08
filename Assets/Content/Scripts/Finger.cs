@@ -31,33 +31,11 @@ public class Finger : Pawn
 			}
 		}
     }
-	
-	private float	m_Score;
-    public  float  	Score
-    {
-        get { return m_Score; }
-        set
-		{
-			if ( !m_IsSpawning && !m_IsDying )
-			{
-				m_Score += value;
-				if ( m_Score < 0.0f )
-				{
-					m_Score = 0.0f;
-				}
-			}
-		}
-    }
 
 	public 	float	spawnRate;
 	public 	float	dieRate;
 	public	float	rotationRate;
 	public	float	approachSpeed;
-	
-	// Each scoreTime (in seconds) the score will is increased by 1 times scoreRate.
-	public	float	scoreTime;
-	public	float 	scoreRate;
-	private float	m_IncTime;
 	
 	// Use this when the level is loaded
 	protected override void Awake()
@@ -86,8 +64,8 @@ public class Finger : Pawn
 	// Calculate the approaching point
 	private Vector3 ApproachPoint()
 	{
-		// Declare the displacement vector
-		Vector3 movement = new Vector3( 0.0f, 0.0f, 0.0f );
+		// Point to reach in the space.
+		Vector3 moveToPoint = transform.localPosition;
 
 		// Calculate the movement due to the stationary position
 		// of the finger, which the actor tends to approach.
@@ -96,9 +74,8 @@ public class Finger : Pawn
 		{
 			Vector3 reachPoint = SceneManager.CurrentCamera.ScreenToWorldPoint(
 				new Vector3( Input.mousePosition.x, Input.mousePosition.y, SceneManager.CurrentCamera.far ) );
-
-			Vector3 approachMov = new Vector3(reachPoint.x,transform.localPosition.y,reachPoint.z);
-			movement = (approachMov - transform.localPosition) * approachSpeed;
+			
+			moveToPoint = new Vector3(reachPoint.x,transform.localPosition.y,reachPoint.z);
 		}
 		else
 		{
@@ -110,15 +87,35 @@ public class Finger : Pawn
 				{					
 					// Calculate the movement due to the stationary position
 					// of the finger, which the actor tends to approach.
-					Vector3 reachPoint = new Vector3( hit.point.x, transform.localPosition.y, hit.point.z );
-					movement = (reachPoint - transform.localPosition) * approachSpeed;
-					
+					moveToPoint = new Vector3( hit.point.x, transform.localPosition.y, hit.point.z );					
 					break;
 				}
 			}
 		}
 		
-		return movement;
+		// We need to limit the finger movement, so that, we can just go forward.
+		Vector2 farest = new Vector2(
+			SceneManager.CurrentCamera.transform.position.x + GameSettings.BaseSurfaceExtent - m_Size*0.5f,
+			SceneManager.CurrentCamera.transform.position.z - SceneManager.CurrentCamera.orthographicSize + m_Size*0.5f);
+		
+		// Limit on the x axis
+		if ( moveToPoint.x > farest.x )
+		{
+			moveToPoint.x = farest.x;
+		}
+		else if ( moveToPoint.x < -farest.x )
+		{
+			moveToPoint.x = -farest.x;
+		}
+		
+		// Limit on the -z axis
+		if ( moveToPoint.z < farest.y )
+		{
+			moveToPoint.z = farest.y;
+		}
+		
+		// Return the movement vecotr.
+		return (moveToPoint - transform.localPosition) * approachSpeed;
 	}
 	
 	// Move the actor
@@ -247,21 +244,15 @@ public class Finger : Pawn
 			// This check shouldn't be necessary
 			if ( particles != null )
 			{
-				// Change the alpha according to the energy left.
 		        for (int ip = 0; ip < particles.Length; ++ip)
 		        {
-					particles[ip].color = Color.yellow;
+					// Change the alpha according to the energy left.
 					Color particleColor = particles[ip].color;
 					particles[ip].color = new Color(particleColor.r,particleColor.g,particleColor.b, Mathf.Max(0.2f,m_Energy));
+					
+					// Set the current finger size.
+					particles[ip].size = m_Size;
 		        }
-			}
-			
-			// Increment the score if necessary
-			m_IncTime += Time.deltaTime;
-			if ( m_IncTime >= scoreTime )
-			{
-				this.Score = 1*scoreRate;
-				m_IncTime = 0.0f;
 			}
 		}
 		
@@ -272,15 +263,6 @@ public class Finger : Pawn
 		}
 	}
 	
-	// Gui
-	void OnGUI()
-	{
-		string scoreString = "Score: " + m_Score.ToString("F2");
-		GUI.Label(new Rect(10, 10, 10 * scoreString.Length, 20), scoreString);
-		string energyString = "Energy: " + m_Energy.ToString("P1");
-		GUI.Label(new Rect(10, 25, 10*energyString.Length, 20), energyString);
-	}
-	
 	// Spawn the actor, and initialise the size.
 	public override void Spawn()
 	{
@@ -288,7 +270,6 @@ public class Finger : Pawn
 		
 		m_Size = 0.0f;
         m_Energy = 1.0f;
-		m_Score = 0.0f;
 		
 		m_IsSpawning = false;
 		m_IsDying = false;
@@ -306,21 +287,16 @@ public class Finger : Pawn
 
 		// Clamp the approach speed.
 		approachSpeed = Mathf.Clamp01( approachSpeed );
-		
-		// Clamp the score time.
-		scoreTime = Mathf.Max( 0.0f, scoreTime );
-		scoreRate = Mathf.Max( 0, scoreRate );
 	}
 	
 	// Kill the actor
 	public override void Kill()
 	{
         GameManager.Finger = null;
+		GameManager.Score = 0.0f;
 
         m_Size = 0.0f;
         m_Energy = 0.0f;
-		m_Score = 0.0f;
-		m_IncTime = 0.0f;
 
         base.Kill();
 	}

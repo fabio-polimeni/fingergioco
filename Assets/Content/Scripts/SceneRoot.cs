@@ -5,6 +5,12 @@ public class SceneRoot : MonoBehaviour
 {
     // Scene index. This should respect the build scene order.
     public int SceneIndex;
+	
+	// Indicate whether or not the level is entered by the camera entirely..
+	public bool Entered;
+	
+	// Store the scene loop the level has been loaded from.
+	public int RegisteredLoop;
 
     // This is the destroyable game object root.
     // Every level must have one and one only this object.
@@ -19,33 +25,25 @@ public class SceneRoot : MonoBehaviour
     // Use this when the level is loaded
     protected virtual void Awake()
     {
-        // If SceneManager.LastLoadedScene is < 0, then,
-        // this is the first root to be initialised.
-        if (SceneManager.LastLoadedScene < 0)
-        {
-            // NOTE: This code should never get triggered in
-            // realse build, because we need to load everything
-            // from the main menu.
-            SceneManager.SetLoadedSceneByIndex(this.SceneIndex);
+		// If a valid instance of the SceneManager doesn't not
+		// exist, then, this is the first time we load a scene.
+		if ( !SceneManager.IsInitialised )
+		{
+			SceneManager.SetLoadedSceneByIndex(0);
+		}
 
-            // Move the camera to the centre of the new loaded scene.
-            Vector3 newCameraPosition = new Vector3(
-                SceneManager.CurrentCamera.transform.position.x,
-                SceneManager.CurrentCamera.transform.position.y,
-                GameSettings.BaseSurfaceExtent * 2.0f * (float)this.SceneIndex);
-
-            SceneManager.CurrentCamera.transform.position = newCameraPosition;
-        }
-        
         // Once we load this level, we add the root to the level manager.
         if (SceneManager.Roots[SceneManager.LastLoadedScene] == null)
         {
+			this.Entered = false;
             this.SceneIndex = SceneManager.LastLoadedScene;
+			this.RegisteredLoop = SceneManager.LoopCounter;
+			
             SceneManager.Roots[this.SceneIndex] = this;
 
             // Need to determine where to load the scene in the space.
             float offset = GameSettings.BaseSurfaceExtent * 2.0f;
-            this.transform.localPosition += new Vector3(0.0f, 0.0f, offset * (float)this.SceneIndex);
+            this.transform.localPosition += new Vector3(0.0f, 0.0f, offset * (float)(this.SceneIndex + SceneManager.LoopCounter*SceneManager.TotalLevels));
 
         #if UNITY_EDITOR
             Debug.Log("Scene registered: " + this.SceneIndex);

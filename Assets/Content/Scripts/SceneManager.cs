@@ -18,22 +18,50 @@ public class SceneManager : MonoBehaviour
     // same time, assume the previous and the next ones are available, if they make sense.
     // They might are not available in case the current level index is zero, or is equel to
     // the last available scene in the game.
+	private int m_CurrentScene;
     public static int CurrentScene
     {
         get
         {
             // Calculate the scene index the camera is on, or clamp values to reasonable ones.
-            return Mathf.Clamp( (int)((SceneManager.Instance.m_CurrentCamera.transform.position.z + GameSettings.BaseSurfaceExtent)
-                / (GameSettings.BaseSurfaceExtent * 2.0f)), 0, SceneManager.TotalLevels);
+            return SceneManager.Instance.m_CurrentScene =
+				(int)((SceneManager.Instance.m_CurrentCamera.transform.position.z + GameSettings.BaseSurfaceExtent)/(GameSettings.BaseSurfaceExtent * 2.0f));
         }
     }
-
-    // Number of total levels to load.
-    public static int TotalLevels
+	
+	private int m_LevelScene;
+	public static int LevelScene
     {
-        // Return number of currently loaded scenes.
-        get { return Application.levelCount-1; }
+        get
+        {
+            // Calculate the level index the camera is on, or clamp values to reasonable ones.
+            return SceneManager.Instance.m_LevelScene = (SceneManager.CurrentScene) - (SceneManager.SceneLoops*SceneManager.TotalLevels);
+        }
     }
+	
+	// Level loops
+	private int m_SceneLoops;
+	public static int SceneLoops
+	{
+		get { return SceneManager.Instance.m_SceneLoops; }
+	}
+	
+	// Loop counter
+	private int m_LoopCounter;
+	public static int LoopCounter
+	{
+		get { return SceneManager.Instance.m_LoopCounter; }
+	}
+
+    // Number of total levels we keep loaded.
+    public static int TotalLevels = 4;
+    //{
+        // Return number of total scenes in the game.
+		// We subtract 1, because the main menu.
+        //get { return Application.levelCount-1; }
+		//get { return GameSettings.MaxNumberOfLevels; }
+	//	get { return 3; }
+    //}
 
     // Number of loaded scenes.
     private int m_NumberOfLoadedScenes;
@@ -85,6 +113,10 @@ public class SceneManager : MonoBehaviour
                 m_Instance.m_SceneLoading = -1;
                 m_Instance.m_LastLoadedScene = -1;
                 m_Instance.m_NumberOfLoadedScenes = 0;
+				
+				// These two values store scene manager information decoupled.
+				m_Instance.m_LoopCounter = 0;
+				m_Instance.m_SceneLoops = 0;
 
                 // Load the main camera.
                 if (Camera.main == null)
@@ -104,10 +136,16 @@ public class SceneManager : MonoBehaviour
             return m_Instance;
         }
     }
+	
+	public static bool IsInitialised
+	{
+		get { return m_Instance == null ? false : true; }
+	}
 
     // Use this when the level is loaded
     void Awake()
-    {
+	{
+		//SceneManager.LoadNextScene(GameSettings.AdditiveSceneLoading, !GameSettings.AsyncSceneLoading);
     }
 
     // Use this for initialization
@@ -120,6 +158,18 @@ public class SceneManager : MonoBehaviour
     {
         SceneManager.DestroyTermporaries();
     }
+	
+	// Print debug info on screen
+	void OnGUI()
+	{
+		// SceneManager.CurrentScene
+		string scoreString = "SceneManager.CurrentScene: " + SceneManager.CurrentScene.ToString("D");
+		GUI.Label(new Rect(200, 10, 10 * scoreString.Length, 20), scoreString);
+			
+		// SceneManager.LevelScene
+		string energyString = "SceneManager.LevelScene: " + SceneManager.LevelScene.ToString("D");
+		GUI.Label(new Rect(200, 25, 10*energyString.Length, 20), energyString);
+	}
 
     /// <summary>
     /// Non-Unity functions.
@@ -175,7 +225,59 @@ public class SceneManager : MonoBehaviour
         //( additive ) ? Application.LoadLevelAdditiveAsync( index ) : Application.LoadLevelAsync( index );
     }
 
-    // Load a new level by index and add it to the current scene.
+    // Load the previous scene. Return the index of loading level.
+    // If returns a negative number, then, is not possibile to load the previous level.
+    private static int LoadPreviousScene(bool additive, bool blocking)
+    {
+        // Determine previous level index.
+        int prevLevelIndex = -1;
+
+        // If the current one is greater than one.
+        if (    (SceneManager.CurrentScene >= 0)
+            && (SceneManager.NumberOfLoadedScenes < SceneManager.TotalLevels))
+        {
+        #if UNITY_EDITOR
+            Debug.Log("LoadPreviousScene()"
+                + "\nSceneManager.CurrentScene: " + SceneManager.CurrentScene
+                + "\nIndexToLoad: " + (SceneManager.CurrentScene - 1)
+            );
+        #endif
+            // Load previous index.
+            if (SceneManager.LoadSceneByIndex(
+                SceneManager.CurrentScene - 1, additive, blocking))
+            {
+                prevLevelIndex = SceneManager.CurrentScene - 1;
+            }
+        }
+
+        return prevLevelIndex;
+    }
+
+    // Destroy a given scene by index.
+    // Return true if the scene was loaded and now has been destroyed successfully.
+    private static bool UnloadSceneByIndex(int index)
+    {
+        if ((index >= 0) && (index < SceneManager.Roots.Length) && (SceneManager.NumberOfLoadedScenes > 0))
+        {
+            SceneRoot root = SceneManager.Roots[index];
+            if (root)
+            {
+                Object.Destroy(SceneManager.Roots[index].TreeRoot);
+                SceneManager.Roots[index] = null;
+
+            #if UNITY_EDITOR
+                Debug.Log("UnloadSceneByIndex(" + index + ")");
+            #endif
+
+                --SceneManager.Instance.m_NumberOfLoadedScenes;
+                return true;
+            }
+        }
+
+        return false;
+    }
+	
+   	// Load a new level by index and add it to the current scene.
     public static bool LoadSceneByIndex(int index, bool additive, bool blocking)
     {
         if (   (Application.isLoadingLevel == false)            // The application is still loading
@@ -213,85 +315,56 @@ public class SceneManager : MonoBehaviour
 
         return false;
     }
-
-    // Load the next scene. Return the index of loading level.
+	
+	// Load the next scene. Return the index of loading level.
     // If returns a negative number, then, is not possibile to load the next level.
     public static int LoadNextScene(bool additive, bool blocking)
-    {
-        // Determine the next level index.
-        int nextLevelIndex = -1;
+    {		
+		// Increment the current scene loop index
+		SceneManager.Instance.m_SceneLoops = SceneManager.CurrentScene/SceneManager.TotalLevels;
+				
+        // Determine the next level index
+        int levelIndexToLoad = SceneManager.LevelScene+1;
+		
+		// Increment the loop counter if necessary
+		int inclLoopCounter = 0;
+		if ( levelIndexToLoad == SceneManager.TotalLevels )
+		{
+			inclLoopCounter = 1;
+			levelIndexToLoad = 0;
+		}
+		
+		// Determine the scene index to unload.
+		int levelIndexToUnload = levelIndexToLoad - 3;
+		if ( levelIndexToUnload < 0 )
+		{
+			levelIndexToUnload = SceneManager.TotalLevels + levelIndexToUnload;
+		}
+	
+		// Unload the scene
+		if ( levelIndexToUnload != levelIndexToLoad )
+		{
+			UnloadSceneByIndex( levelIndexToUnload );
+		}
+		
+		// Unload next scene in the buffer, if the current loop is
+		// bigger than the one the scene has been registered to.
+		if ( IsSceneLoaded(levelIndexToLoad) )
+		{
+			if ( Roots[levelIndexToLoad].RegisteredLoop < SceneManager.Instance.m_SceneLoops )
+			{
+				UnloadSceneByIndex(levelIndexToLoad);
+			}
+		}
 
-        // If the current one is not the last one.
-        if ((SceneManager.CurrentScene < (SceneManager.TotalLevels - 1))
-            && (SceneManager.NumberOfLoadedScenes < SceneManager.TotalLevels))
-        {
-    #if UNITY_EDITOR
-        Debug.Log("LoadNextScene()"
-            + "\nSceneManager.CurrentScene: " + SceneManager.CurrentScene
-            + "\nIndexToLoad: " + (SceneManager.CurrentScene + 1)
-        );
-    #endif
-            // Load next scene.
-            if (SceneManager.LoadSceneByIndex(
-                SceneManager.CurrentScene + 1, additive, blocking))
-            {
-                nextLevelIndex = SceneManager.CurrentScene + 1;
-            }
+       	// Load next scene.
+       	if (SceneManager.LoadSceneByIndex(levelIndexToLoad, additive, blocking))
+       	{
+			SceneManager.Instance.m_LoopCounter += inclLoopCounter;
+	        return levelIndexToLoad;
         }
 
-        return nextLevelIndex;
-    }
-
-    // Load the previous scene. Return the index of loading level.
-    // If returns a negative number, then, is not possibile to load the previous level.
-    public static int LoadPreviousScene(bool additive, bool blocking)
-    {
-        // Determine previous level index.
-        int prevLevelIndex = -1;
-
-        // If the current one is greater than one.
-        if (    (SceneManager.CurrentScene >= 0)
-            && (SceneManager.NumberOfLoadedScenes < SceneManager.TotalLevels))
-        {
-        #if UNITY_EDITOR
-            Debug.Log("LoadPreviousScene()"
-                + "\nSceneManager.CurrentScene: " + SceneManager.CurrentScene
-                + "\nIndexToLoad: " + (SceneManager.CurrentScene - 1)
-            );
-        #endif
-            // Load previous index.
-            if (SceneManager.LoadSceneByIndex(
-                SceneManager.CurrentScene - 1, additive, blocking))
-            {
-                prevLevelIndex = SceneManager.CurrentScene - 1;
-            }
-        }
-
-        return prevLevelIndex;
-    }
-
-    // Destroy a given scene by index.
-    // Return true if the scene was loaded and now has been destroyed successfully.
-    public static bool UnloadSceneByIndex(int index)
-    {
-        if ((index >= 0) && (index < SceneManager.Roots.Length) && (SceneManager.NumberOfLoadedScenes > 0))
-        {
-            SceneRoot root = SceneManager.Roots[index];
-            if (root)
-            {
-                Object.Destroy(SceneManager.Roots[index].TreeRoot);
-                SceneManager.Roots[index] = null;
-
-            #if UNITY_EDITOR
-                Debug.Log("UnloadSceneByIndex(" + index + ")");
-            #endif
-
-                --SceneManager.Instance.m_NumberOfLoadedScenes;
-                return true;
-            }
-        }
-
-        return false;
+        return -1;
     }
 
     // Set the loaded scene. It means we have loaded
@@ -307,7 +380,7 @@ public class SceneManager : MonoBehaviour
     }
 
     // Destroy all temporary objects.
-    public static void DestroyTermporaries()
+    private static void DestroyTermporaries()
     {
 #if UNITY_EDITOR
         GameObject[] temporaries = GameObject.FindGameObjectsWithTag("Temporary");
