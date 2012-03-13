@@ -37,6 +37,8 @@ public class Finger : Pawn
 	public	float	rotationRate;
 	public	float	approachSpeed;
 	
+	private float	m_ApproachSpeed;
+	
 	// Use this when the level is loaded
 	protected override void Awake()
 	{
@@ -59,6 +61,14 @@ public class Finger : Pawn
 	protected override void Start()
 	{
 		base.Start();
+	}
+	
+	// Slow down the finger's approach speed.
+	// Values expected in percentages.
+	// 100% means the finger will stop complitelly.
+	public void SlowDown( float factor )
+	{
+		m_ApproachSpeed = approachSpeed * (1.0f-Mathf.Clamp01(factor));
 	}
 	
 	// Calculate the approaching point
@@ -115,7 +125,7 @@ public class Finger : Pawn
 		}
 		
 		// Return the movement vecotr.
-		return (moveToPoint - transform.localPosition) * approachSpeed;
+		return (moveToPoint - transform.localPosition) * m_ApproachSpeed;
 	}
 	
 	// Move the actor
@@ -258,6 +268,16 @@ public class Finger : Pawn
 		
 		if ( particles != null )
 		{
+			for (int ip = 0; ip < particles.Length; ++ip)
+		    {
+				// Until finger exists, do not kill its particles
+				particles[ip].energy -= Time.deltaTime;
+				if ( particles[ip].energy <= 0.0f )
+				{
+					particles[ip].energy = particles[ip].startEnergy;
+				}
+			}
+			
 			// Copy back modified particles
 		    particleEmitter.particles = particles;
 		}
@@ -287,6 +307,7 @@ public class Finger : Pawn
 
 		// Clamp the approach speed.
 		approachSpeed = Mathf.Clamp01( approachSpeed );
+		m_ApproachSpeed = approachSpeed;
 	}
 	
 	// Kill the actor

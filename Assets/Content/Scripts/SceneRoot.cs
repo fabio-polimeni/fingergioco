@@ -27,16 +27,18 @@ public class SceneRoot : MonoBehaviour
     {
 		// If a valid instance of the SceneManager doesn't not
 		// exist, then, this is the first time we load a scene.
+		bool moveCamera = false;
 		if ( !SceneManager.IsInitialised )
 		{
-			SceneManager.SetLoadedSceneByIndex(0);
+			SceneManager.SetLoadedSceneByIndex(this.SceneIndex);
+			moveCamera = true;
 		}
 
         // Once we load this level, we add the root to the level manager.
         if (SceneManager.Roots[SceneManager.LastLoadedScene] == null)
         {
 			this.Entered = false;
-            this.SceneIndex = SceneManager.LastLoadedScene;
+            //this.SceneIndex = SceneManager.LastLoadedScene;
 			this.RegisteredLoop = SceneManager.LoopCounter;
 			
             SceneManager.Roots[this.SceneIndex] = this;
@@ -44,6 +46,12 @@ public class SceneRoot : MonoBehaviour
             // Need to determine where to load the scene in the space.
             float offset = GameSettings.BaseSurfaceExtent * 2.0f;
             this.transform.localPosition += new Vector3(0.0f, 0.0f, offset * (float)(this.SceneIndex + SceneManager.LoopCounter*SceneManager.TotalLevels));
+			
+			if ( moveCamera )
+			{
+				// Tranaslate camera
+				SceneManager.CurrentCamera.transform.position += this.transform.localPosition;
+			}
 
         #if UNITY_EDITOR
             Debug.Log("Scene registered: " + this.SceneIndex);

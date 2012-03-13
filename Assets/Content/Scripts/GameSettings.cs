@@ -46,6 +46,9 @@ public class GameSettings : MonoBehaviour
 	
 	public	float 			m_ScoreIncRate			= 0.1f;
 	public static	float 	ScoreIncRate   			{ get { return GameSettings.Instance.m_ScoreIncRate; } }
+	
+	public	float 			m_SoundtrackAttenuation = 0.5f;
+	public static	float 	SoundtrackAttenuation	{ get { return GameSettings.Instance.m_SoundtrackAttenuation; } }
 
 	// Singleton pattern.
 	private static GameSettings m_Instance = null;

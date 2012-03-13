@@ -155,8 +155,8 @@ public class GameManager : MonoBehaviour
 				// Tranaslate camera
 				SceneManager.CurrentCamera.transform.position += cameraTranslation * GameSettings.CameraSpeed;
 				
-				int levelIndex = SceneManager.LevelScene;
-				if ( levelIndex < SceneManager.TotalLevels )
+				int levelIndex = SceneManager.SceneIndex;
+				if ( levelIndex < SceneManager.TotalLevels && levelIndex > 0 )
 				{
 					SceneRoot currentScene = SceneManager.Roots[levelIndex];
 					if ( currentScene )
@@ -191,11 +191,11 @@ public class GameManager : MonoBehaviour
             }
 			
 			// Increment the score
-			if ( (currentTime - m_ScoreLastTime) >= GameSettings.ScoreDeltaTime )
-			{
-				m_Score += GameSettings.ScoreIncRate;
-				m_ScoreLastTime = currentTime;
-			}
+//			if ( (currentTime - m_ScoreLastTime) >= GameSettings.ScoreDeltaTime )
+//			{
+//				m_Score += GameSettings.ScoreIncRate;
+//				m_ScoreLastTime = currentTime;
+//			}
 			
 			// Increment the difficulty
 			if ( (currentTime - m_DifficultyLastTime) >= GameSettings.DifficultyDeltaTime )

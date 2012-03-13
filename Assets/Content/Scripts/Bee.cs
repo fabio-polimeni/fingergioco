@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class Bee : Enemy
+public class Bee : MonoBehaviour
 {
 	/// <summary>
 	/// Properties.
@@ -26,20 +26,25 @@ public class Bee : Enemy
 	// Attack speed.
 	public float AttackSpeed;
 	
+	// How much of the particle energy to conserve
+	// once it collide against the finger.
+	public float DyingFactor;
+
 	// Damage percentage to apply when particles collide.
 	// It will be scaled by the particle's size factor.
 	public float Damage;
+	
+	protected ParticleAnimator particleAnimator = null;
+    protected ParticleRenderer particleRenderer = null;
 	
 	/// <summary>
 	/// Unity functions.
 	/// </summary>
 
 	// Use this when the level is loaded
-	protected override void Awake()
+	void Awake()
 	{
-		base.Awake();
-
-        particleAnimator = GetComponent<ParticleAnimator>();
+		particleAnimator = GetComponent<ParticleAnimator>();
         particleRenderer = GetComponent<ParticleRenderer>();
 
         if (particleAnimator)
@@ -56,6 +61,7 @@ public class Bee : Enemy
 		AttackSpeed = Mathf.Max(0.0f,AttackSpeed);
 		ForceStep = Mathf.Max(0.0f,ForceStep);
 		Damage = Mathf.Max(0.0f,Damage);
+		DyingFactor = Mathf.Clamp01(DyingFactor);
 		
 		if ( AttractionRange == 0.0f || AttractionForce == 0.0f )
 		{
@@ -65,10 +71,8 @@ public class Bee : Enemy
 	}
 
 	// Use this for initialization
-	protected override void Start ()
+	void Start()
 	{
-		base.Start();
-
         // When the enemy is spawned we want to give an input to
         // the particles, in order to follow the finger position.
         if (particleEmitter && GameManager.Finger)
@@ -87,25 +91,30 @@ public class Bee : Enemy
 			particleAnimator.localRotationAxis = Vector3.up;
 			particleAnimator.worldRotationAxis = Vector3.up;
 		}
+		
+		if ( audio )
+		{
+			SceneManager.TurnVolume(GameSettings.SoundtrackAttenuation);
+			audio.enabled = true;
+			audio.Play();
+		}
 	}
 	
 	// Update physics
-	protected override void FixedUpdate()
+	void FixedUpdate()
 	{
-		base.FixedUpdate();
 	}
 	
 	// Update is called once per frame
-	protected override void Update ()
+	void Update()
 	{
-		base.Update();
-
         // Iterate all over particles.
         Particle[] p = particleEmitter.particles;
-		
         for (int ip = 0; ip < particleEmitter.particles.Length; ++ip)
         {
             Particle particle = p[ip];
+			
+			// Handle finger interaction per particle.
 			if (particleEmitter && GameManager.Finger)
         	{
 				particle.position = new Vector3(particle.position.x, GameManager.Finger.transform.position.y, particle.position.z);
@@ -113,16 +122,13 @@ public class Bee : Enemy
                 // Sphere-Sphere intersection.
                 Vector3 moveDirection = GameManager.Finger.transform.position - particle.position;
                 float distance = moveDirection.magnitude;
-				
-				//particle.color = Color.white;
-				
+								
 				// Handle attraction
                 if (AttractionForce > 0.0f && AttractionRange > 0.0f)
                 {
 					//particle.color = Color.magenta;
                     if (distance <= (GameManager.FingerComponent.Size + (particle.size + particle.size * AttractionRange)) * 0.5f)
                     {
-                        //particle.color = Color.green;
 
                         // Add to the current velocity a velocity vector in direction of the finger.
                         float speed = particle.velocity.magnitude;
@@ -134,12 +140,13 @@ public class Bee : Enemy
 				                
 				// Handle collision
 				if (distance <= (GameManager.FingerComponent.Size + particle.size*CollisionScale) * 0.5f)
-                {
-                    //particle.color = Color.red;
-					
+                {					
 					// Apply damage according to the current liftime of the particle.
 					float lifetime = 1.0f - particle.energy/particle.startEnergy;
 					GameManager.FingerComponent.Energy = -Damage*lifetime;
+					
+					// Bees tend to die fast once they touch the enemy.
+					particle.energy *= DyingFactor;
                 }
             }
 			
@@ -150,37 +157,19 @@ public class Bee : Enemy
 
 			// Copy back modified particle.
             p[ip] = particle;
-
-            // Copy back modified particles.
-            particleEmitter.particles = p;
         }
+		
+        // Copy back modified particles.
+        particleEmitter.particles = p;
 	}
 	
-	/// <summary>
-	/// Non-Unity functions. 
-	/// </summary>
-	
-	// Move the pawn
-	protected override void Move( Vector3 movement )
+	void OnDestroy()
 	{
-		base.Move( movement );
-	}
-	
-	// Rotate the pawn
-	protected override void Rotate( float rotation )
-	{
-		base.Rotate( rotation );
-	}
-	
-	// Spawn the pawn
-	public override void Spawn()
-	{
-		base.Spawn();
-	}
-	
-	// Kill the actor
-	public override void Kill()
-	{
-		base.Kill();
+		if ( audio && audio.enabled )
+		{
+			SceneManager.TurnVolume(1.0f);
+			audio.Stop();
+			audio.enabled = false;
+		}
 	}
 }

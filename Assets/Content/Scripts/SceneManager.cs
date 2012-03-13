@@ -23,19 +23,20 @@ public class SceneManager : MonoBehaviour
     {
         get
         {
-            // Calculate the scene index the camera is on, or clamp values to reasonable ones.
+            // Calculate the scene the camera is on, or clamp values to reasonable ones.
             return SceneManager.Instance.m_CurrentScene =
 				(int)((SceneManager.Instance.m_CurrentCamera.transform.position.z + GameSettings.BaseSurfaceExtent)/(GameSettings.BaseSurfaceExtent * 2.0f));
         }
     }
 	
-	private int m_LevelScene;
-	public static int LevelScene
+	// Returns -1 if no loaded scenes yet.
+	private int m_SceneIndex;
+	public static int SceneIndex
     {
         get
         {
-            // Calculate the level index the camera is on, or clamp values to reasonable ones.
-            return SceneManager.Instance.m_LevelScene = (SceneManager.CurrentScene) - (SceneManager.SceneLoops*SceneManager.TotalLevels);
+            // Calculate the level index the camera is on. (SceneManager.NumberOfLoadedScenes-1)
+            return SceneManager.Instance.m_SceneIndex = (SceneManager.CurrentScene) - (SceneManager.SceneLoops*SceneManager.TotalLevels);
         }
     }
 	
@@ -52,7 +53,14 @@ public class SceneManager : MonoBehaviour
 	{
 		get { return SceneManager.Instance.m_LoopCounter; }
 	}
-
+	
+	private float[] m_AudioVolumes;
+	public static float[] AudioVolumes
+	{
+		get { return SceneManager.Instance.m_AudioVolumes; }
+        set { SceneManager.Instance.m_AudioVolumes = value; }
+	}
+	
     // Number of total levels we keep loaded.
     public static int TotalLevels = 4;
     //{
@@ -104,7 +112,9 @@ public class SceneManager : MonoBehaviour
                 m_Instance = go.AddComponent<SceneManager>();
                 go.name = "SceneManager";
 
-                // Instantiate level roots array.
+                // Calculate the number of levels.
+				//SceneManager.TotalLevels = Application.levelCount - 1;
+				
                 // Level roots are not initialised at this point.
                 m_Instance.m_Roots = new SceneRoot[SceneManager.TotalLevels];
 
@@ -151,6 +161,14 @@ public class SceneManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+		// Store initial soundtrack volumes.
+		AudioSource[] audioSources = SceneManager.CurrentCamera.GetComponents<AudioSource>();
+		SceneManager.AudioVolumes = new float[audioSources.Length];
+		for( int ai = 0; ai < audioSources.Length; ++ai )
+		{
+			AudioSource audioSource = audioSources[ai];
+			SceneManager.AudioVolumes[ai] = audioSource.volume;
+		}
     }
 
     // Update is called once per frame
@@ -162,20 +180,33 @@ public class SceneManager : MonoBehaviour
 	// Print debug info on screen
 	void OnGUI()
 	{
-		// SceneManager.CurrentScene
-		string scoreString = "SceneManager.CurrentScene: " + SceneManager.CurrentScene.ToString("D");
-		GUI.Label(new Rect(200, 10, 10 * scoreString.Length, 20), scoreString);
-			
-		// SceneManager.LevelScene
-		string energyString = "SceneManager.LevelScene: " + SceneManager.LevelScene.ToString("D");
-		GUI.Label(new Rect(200, 25, 10*energyString.Length, 20), energyString);
+//		// SceneManager.CurrentScene
+//		string scoreString = "SceneManager.CurrentScene: " + SceneManager.CurrentScene.ToString("D");
+//		GUI.Label(new Rect(200, 10, 10 * scoreString.Length, 20), scoreString);
+//			
+//		// SceneManager.LevelScene
+//		string energyString = "SceneManager.LevelScene: " + SceneManager.SceneIndex.ToString("D");
+//		GUI.Label(new Rect(200, 25, 10*energyString.Length, 20), energyString);
 	}
 
     /// <summary>
     /// Non-Unity functions.
     /// </summary>
-
-    // Load a new level.
+	
+	// Turn volume by a factor with respect to
+	// its initial value. It relies on the fact
+	// that we are not add or remove existing
+	// audio sources at run-time.
+	public static void TurnVolume( float volFactor )
+	{
+		AudioSource[] audioSources = SceneManager.CurrentCamera.GetComponents<AudioSource>();
+		for( int ai = 0; ai < audioSources.Length; ++ai )
+		{
+			audioSources[ai].volume = SceneManager.AudioVolumes[ai] * Mathf.Clamp01(volFactor);
+		}
+	}
+    
+	// Load a new level.
     private void LoadSceneSync(int index, bool additive)
     {
         if (additive)
@@ -233,8 +264,8 @@ public class SceneManager : MonoBehaviour
         int prevLevelIndex = -1;
 
         // If the current one is greater than one.
-        if (    (SceneManager.CurrentScene >= 0)
-            && (SceneManager.NumberOfLoadedScenes < SceneManager.TotalLevels))
+        if ( (SceneManager.CurrentScene >= 0)
+          && (SceneManager.NumberOfLoadedScenes < SceneManager.TotalLevels))
         {
         #if UNITY_EDITOR
             Debug.Log("LoadPreviousScene()"
@@ -287,6 +318,7 @@ public class SceneManager : MonoBehaviour
             && (SceneManager.IsSceneLoaded(index) == false))    // Scene already loaded
         {
             SceneManager.Instance.m_SceneLoading = index;
+            ++SceneManager.Instance.m_NumberOfLoadedScenes;
             if (blocking)
             {
                 SceneManager.Instance.LoadSceneSync(index, additive);
@@ -295,8 +327,6 @@ public class SceneManager : MonoBehaviour
             {
                 SceneManager.Instance.LoadSceneAsync(index, additive);
             }
-
-            ++SceneManager.Instance.m_NumberOfLoadedScenes;
 
         #if UNITY_EDITOR
             Debug.Log(
@@ -324,7 +354,7 @@ public class SceneManager : MonoBehaviour
 		SceneManager.Instance.m_SceneLoops = SceneManager.CurrentScene/SceneManager.TotalLevels;
 				
         // Determine the next level index
-        int levelIndexToLoad = SceneManager.LevelScene+1;
+        int levelIndexToLoad = SceneManager.SceneIndex+1;
 		
 		// Increment the loop counter if necessary
 		int inclLoopCounter = 0;

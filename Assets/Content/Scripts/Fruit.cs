@@ -8,6 +8,8 @@ public class Fruit : PowerUp
 	/// </summary>
 	public float m_Points;
 	
+	public GameObject StarEffect;
+	
 	/// <summary>
 	/// Unity functions.
 	/// </summary>
@@ -55,7 +57,12 @@ public class Fruit : PowerUp
 		// therefore, this check shouldn't be necessary.
 		if ( GameManager.FingerComponent )
 		{
+			// Increment the score
 			GameManager.Score += m_Points;
+			
+			// Before dying spawn an effect.
+			GameObject.Instantiate(StarEffect, transform.position, transform.rotation);
+			
 			GameObject.Destroy(gameObject);
 			return true;
 		}

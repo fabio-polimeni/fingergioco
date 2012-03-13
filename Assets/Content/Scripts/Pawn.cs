@@ -1,9 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-[RequireComponent (typeof(Rigidbody),
-				   typeof(MeshCollider))]
-
 public class Pawn : MonoBehaviour
 {
 	/// <summary>
@@ -23,12 +20,6 @@ public class Pawn : MonoBehaviour
 	// Use this when the level is loaded
 	protected virtual void Awake()
 	{		
-		// Disable the mesh render if exists.
-		//MeshRenderer meshRenderer = gameObject.GetComponent<MeshRenderer>();
-		//if ( meshRenderer )
-		//{
-		//	Object.Destroy( meshRenderer );
-		//}
 	}
 
 	// Use this for initialization
